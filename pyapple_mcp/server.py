@@ -316,14 +316,19 @@ def mail(
     subject: str = None,
     body: str = None,
     cc: str = None,
-    bcc: str = None
+    bcc: str = None,
+    full_content: bool = False,
+    search_range: int = None,
+    mark_read: bool = False
 ) -> str:
     """
     Interact with Apple Mail app - read unread emails, search emails, and send emails.
+    Optimized for performance by accessing local Mail database directly.
+    Searches all accounts by default when no account is specified.
     
     Args:
         operation: Operation to perform: 'unread', 'search', 'send', 'mailboxes', or 'accounts'
-        account: Email account to use (optional)
+        account: Email account to use (optional, searches all accounts if not specified)
         mailbox: Mailbox to use (optional)
         limit: Number of emails to retrieve (optional, for unread and search operations)
         search_term: Text to search for in emails (required for search operation)
@@ -332,18 +337,34 @@ def mail(
         body: Email body content (required for send operation)
         cc: CC email address (optional for send operation)
         bcc: BCC email address (optional for send operation)
+        full_content: If True, return full email content without truncation (default: False)
+        search_range: Number of recent messages to search through per inbox (optional, ignored for database method)
+        mark_read: If True, mark retrieved unread emails as read (default: False, only for unread operation)
     
     Returns:
         String containing email information or operation result
     """
     try:
         if operation == "unread":
-            emails = mail_handler.get_unread_emails(account, mailbox, limit)
+            # Use optimized database approach for unread emails
+            emails = mail_handler.get_unread_emails(account, mailbox, limit, full_content, search_range, mark_read)
             if emails:
                 formatted_emails = []
                 for email in emails:
-                    formatted_emails.append(f"From: {email['sender']}\nSubject: {email['subject']}\nDate: {email['date']}\n")
-                return f"Found {len(emails)} unread emails:\n\n" + "\n".join(formatted_emails)
+                    email_info = f"From: {email['sender']}\nSubject: {email['subject']}\nDate: {email['date']}"
+                    if email.get('mailbox'):
+                        email_info += f"\nMailbox: {email['mailbox']}"
+                    if full_content or len(email['content']) <= 500:
+                        email_info += f"\nContent: {email['content']}"
+                    else:
+                        email_info += f"\nContent: {email['content'][:500]}..."
+                    formatted_emails.append(email_info)
+                
+                result = f"Found {len(emails)} unread emails"
+                if mark_read:
+                    result += " (marked as read)"
+                result += ":\n\n" + "\n\n".join(formatted_emails)
+                return result
             else:
                 return "No unread emails found"
                 
@@ -351,12 +372,28 @@ def mail(
             if not search_term:
                 return "Search term is required for search operation"
             
-            emails = mail_handler.search_emails(search_term, account, mailbox, limit)
+            emails = mail_handler.search_emails(search_term, account, mailbox, limit, full_content, search_range)
             if emails:
                 formatted_emails = []
                 for email in emails:
-                    formatted_emails.append(f"From: {email['sender']}\nSubject: {email['subject']}\nDate: {email['date']}\nContent preview: {email['content'][:100]}...")
-                return f"Found {len(emails)} emails matching '{search_term}':\n\n" + "\n".join(formatted_emails)
+                    email_info = f"From: {email['sender']}\nSubject: {email['subject']}\nDate: {email['date']}"
+                    if email.get('account'):
+                        email_info += f"\nAccount: {email['account']}"
+                    if email.get('mailbox'):
+                        email_info += f"\nMailbox: {email['mailbox']}"
+                    if full_content or len(email['content']) <= 500:
+                        email_info += f"\nContent: {email['content']}"
+                    else:
+                        email_info += f"\nContent: {email['content'][:500]}..."
+                    formatted_emails.append(email_info)
+                
+                result = f"Found {len(emails)} emails matching '{search_term}' (case insensitive)"
+                if limit == -1:
+                    result += " (all)"
+                else:
+                    result += f" (limit: {limit})"
+                result += ":\n\n" + "\n\n".join(formatted_emails)
+                return result
             else:
                 return f"No emails found matching '{search_term}'"
                 
@@ -383,6 +420,7 @@ def mail(
                 return f"Available accounts: {', '.join(accounts)}"
             else:
                 return "No email accounts found"
+                
         else:
             return f"Unknown operation: {operation}. Valid operations are: unread, search, send, mailboxes, accounts"
             
