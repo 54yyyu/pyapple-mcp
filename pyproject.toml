@@ -50,6 +50,7 @@ Issues = "https://github.com/pyapple-mcp/pyapple-mcp/issues"
 
 [project.scripts]
 pyapple-mcp = "pyapple_mcp.server:main"
+pyapple-mcp-setup = "pyapple_mcp.setup_helper:main"
 
 [tool.black]
 line-length = 88

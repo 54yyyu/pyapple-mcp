@@ -21,39 +21,41 @@ A Python implementation of Apple-native tools for the [Model Context Protocol (M
 
 ## Quick Installation
 
-### Using MCP CLI (Recommended)
+### Automated Setup (Recommended)
 
 ```bash
-# Install for Claude Desktop
-mcp install pyapple-mcp
+# Install pyapple-mcp
+pip install pyapple-mcp
 
-# Install for Cursor
-mcp install pyapple-mcp --client cursor
+# Run the setup helper to configure Claude Desktop
+pyapple-mcp-setup
 ```
+
+The setup helper will:
+- Find your pyapple-mcp installation
+- Locate your Claude Desktop config file
+- Automatically add the configuration
+- Display helpful setup information
 
 ### Manual Installation
 
-1. **Install Python 3.9+** (if not already installed):
-   ```bash
-   brew install python
-   ```
-
-2. **Install pyapple-mcp**:
+1. **Install pyapple-mcp**:
    ```bash
    pip install pyapple-mcp
    ```
 
-3. **Configure Claude Desktop** by editing `~/Library/Application Support/Claude/claude_desktop_config.json`:
+2. **Configure Claude Desktop** by editing `~/Library/Application Support/Claude Desktop/claude_desktop_config.json`:
    ```json
    {
      "mcpServers": {
-       "pyapple-mcp": {
-         "command": "python",
-         "args": ["-m", "pyapple_mcp.server"]
+       "pyapple": {
+         "command": "pyapple-mcp"
        }
      }
    }
    ```
+
+3. **Restart Claude Desktop** to load the new configuration.
 
 ## Usage Examples
 
@@ -159,6 +161,11 @@ On first use, macOS will prompt for various permissions. Grant access to:
 - Check that the target applications are installed
 - Verify automation permissions in System Settings
 
+**Setup Issues**:
+- Run `pyapple-mcp-setup --help` for setup options
+- Check that pyapple-mcp is in your PATH: `which pyapple-mcp`
+- Use `pyapple-mcp-setup --config-path /path/to/config` for custom config locations
+
 ### Debug Mode
 
 Run with debug logging:
@@ -173,7 +180,7 @@ pyapple-mcp/
 ├── pyapple_mcp/
 │   ├── __init__.py
 │   ├── server.py          # Main MCP server
-│   ├── tools.py           # Tool definitions  
+│   ├── setup_helper.py    # Setup and configuration helper
 │   └── utils/
 │       ├── __init__.py
 │       ├── applescript.py # AppleScript execution
@@ -186,6 +193,7 @@ pyapple-mcp/
 │       ├── reminders.py   # Reminders integration
 │       └── websearch.py   # Web search functionality
 ├── tests/
+├── requirements.txt
 ├── README.md
 ├── LICENSE
 └── pyproject.toml

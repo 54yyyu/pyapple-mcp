@@ -1,11 +1,10 @@
-"""
-Setup script for PyApple MCP
-
-This file provides backward compatibility for older Python packaging tools.
-The main configuration is in pyproject.toml.
-"""
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from setuptools import setup
 
-# This calls the build system defined in pyproject.toml
-setup() 
+# This setup.py is mainly for backward compatibility with older pip versions.
+# For modern builds, we're using pyproject.toml and hatchling.
+
+if __name__ == "__main__":
+    setup()
