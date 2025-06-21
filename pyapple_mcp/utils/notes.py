@@ -170,16 +170,16 @@ class NotesHandler:
             logger.error("Cannot access Notes app")
             return {"success": False, "message": "Cannot access Notes app"}
         
-        # Escape quotes in the content
-        safe_title = title.replace('"', '\\"')
-        safe_body = body.replace('"', '\\"')
+        # Escape quotes and newlines in the content
+        safe_title = title.replace('"', '\\"').replace('\n', '\\n')
+        safe_body = body.replace('"', '\\"').replace('\n', '\\n')
         safe_folder = folder_name.replace('"', '\\"')
         
         script = f'''
         tell application "Notes"
             try
                 -- Try to find the folder, create it if it doesn't exist
-                set targetFolder to null
+                set targetFolder to missing value
                 set targetAccount to account 1
                 
                 try
@@ -189,12 +189,12 @@ class NotesHandler:
                     set targetFolder to make new folder with properties {{name:"{safe_folder}"}} at targetAccount
                 end try
                 
-                -- Create the note
+                -- Create the note first, then set properties
                 set newNote to make new note at targetFolder
-                set name of newNote to "{safe_title}"
                 set body of newNote to "{safe_body}"
+                set name of newNote to "{safe_title}"
                 
-                return "Success: Note created"
+                return "Success: Note '" & "{safe_title}" & "' created in folder '" & "{safe_folder}" & "'"
                 
             on error errMsg
                 return "Error: " & errMsg
@@ -206,10 +206,81 @@ class NotesHandler:
         if result['success'] and result['result']:
             result_msg = result['result']
             if result_msg.startswith("Success:"):
-                return {"success": True, "message": "Note created successfully"}
+                return {"success": True, "message": result_msg.replace("Success: ", "")}
             else:
                 logger.error(f"Notes creation error: {result_msg}")
-                return {"success": False, "message": result_msg}
+                return {"success": False, "message": result_msg.replace("Error: ", "")}
         else:
             logger.error(f"Failed to create note: {result.get('error')}")
-            return {"success": False, "message": f"Failed to create note: {result.get('error')}"} 
+            return {"success": False, "message": f"Failed to create note: {result.get('error')}"}
+    
+    def delete_note(self, search_text: str) -> Dict[str, Any]:
+        """
+        Delete a note by searching for its title or content.
+        
+        Args:
+            search_text: Text to search for in note titles or content
+            
+        Returns:
+            Dictionary with success status and message
+        """
+        if not applescript.check_app_access(self.app_name):
+            logger.error("Cannot access Notes app")
+            return {"success": False, "message": "Cannot access Notes app"}
+        
+        if not search_text.strip():
+            return {"success": False, "message": "Search text is required for delete operation"}
+        
+        safe_search = search_text.replace('"', '\\"')
+        
+        script = f'''
+        tell application "Notes"
+            try
+                set searchText to "{safe_search}"
+                set matchingNotes to {{}}
+                
+                -- Get all notes and check each one
+                set allNotes to notes
+                repeat with aNote in allNotes
+                    try
+                        set noteTitle to name of aNote
+                        set noteContent to body of aNote
+                        if (noteTitle contains searchText) or (noteContent contains searchText) then
+                            set end of matchingNotes to aNote
+                        end if
+                    on error
+                        -- Skip any problematic notes
+                    end try
+                end repeat
+                
+                set noteCount to length of matchingNotes
+                
+                if noteCount = 0 then
+                    return "Error: No notes found matching '" & searchText & "'"
+                else if noteCount > 1 then
+                    return "Error: Multiple notes found matching '" & searchText & "'. Please be more specific."
+                else
+                    set targetNote to item 1 of matchingNotes
+                    set noteTitle to name of targetNote
+                    delete targetNote
+                    return "Success: Deleted note '" & noteTitle & "'"
+                end if
+                
+            on error errMsg
+                return "Error: " & errMsg
+            end try
+        end tell
+        '''
+        
+        result = applescript.run_script(script)
+        if result['success'] and result['result']:
+            result_msg = result['result']
+            if result_msg.startswith("Success:"):
+                logger.info(f"Note deleted successfully: {search_text}")
+                return {"success": True, "message": result_msg.replace("Success: ", "")}
+            else:
+                logger.error(f"Failed to delete note: {result_msg}")
+                return {"success": False, "message": result_msg.replace("Error: ", "")}
+        else:
+            logger.error(f"Failed to delete note: {result.get('error')}")
+            return {"success": False, "message": f"Failed to delete note: {result.get('error')}"} 
