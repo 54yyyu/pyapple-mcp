@@ -58,42 +58,81 @@ websearch_handler = WebSearchHandler()
 
 # Tool: Contacts
 @app.tool()
-def contacts(name: str = None) -> str:
+def contacts(
+    operation: str = "search",
+    name: str = None,
+    first_name: str = None,
+    last_name: str = None,
+    phone: str = None,
+    email: str = None
+) -> str:
     """
-    Search and retrieve contacts from Apple Contacts app.
+    Search, add, and manage contacts in Apple Contacts app.
     
     Args:
-        name: Name to search for (optional - if not provided, returns all contacts). 
-              Can be partial name to search.
+        operation: Operation to perform: 'search', 'add', or 'delete' (default: 'search')
+        name: Name to search for (optional - if not provided, returns all contacts)
+        first_name: First name for new contact (required for add operation)
+        last_name: Last name for new contact (optional for add operation)
+        phone: Phone number for new contact (optional for add operation)
+        email: Email address for new contact (optional for add operation)
     
     Returns:
-        String containing contact information or search results
+        String containing contact information or operation result
     """
     try:
-        if name:
-            numbers = contacts_handler.find_number(name)
-            if numbers:
-                return f"{name}: {', '.join(numbers)}"
+        if operation == "add":
+            if not first_name:
+                return "First name is required for add operation"
+            
+            result = contacts_handler.add_contact(first_name, last_name or "", phone or "", email or "")
+            if result["success"]:
+                contact_info = f"Added contact: {first_name}"
+                if last_name:
+                    contact_info += f" {last_name}"
+                if phone:
+                    contact_info += f" (Phone: {phone})"
+                if email:
+                    contact_info += f" (Email: {email})"
+                return contact_info
             else:
-                return f'No contact found for "{name}". Try a different name or use no name parameter to list all contacts.'
-        else:
-            all_numbers = contacts_handler.get_all_numbers()
-            contact_count = len(all_numbers)
+                return f"Failed to add contact: {result['message']}"
+                
+        elif operation == "delete":
+            if not name:
+                return "Contact name is required for delete operation"
             
-            if contact_count == 0:
-                return "No contacts found in the address book. Please make sure you have granted access to Contacts."
-            
-            # Format contacts for display (limit to first 50 to avoid overwhelming output)
-            contacts_list = []
-            for contact_name, phone_numbers in list(all_numbers.items())[:50]:
-                contacts_list.append(f"{contact_name}: {', '.join(phone_numbers)}")
-            
-            result = f"Found {contact_count} contacts"
-            if contact_count > 50:
-                result += " (showing first 50)"
-            result += ":\n\n" + "\n".join(contacts_list)
-            
-            return result
+            result = contacts_handler.delete_contact(name)
+            if result["success"]:
+                return f"Successfully deleted contact: {result['message']}"
+            else:
+                return f"Failed to delete contact: {result['message']}"
+                
+        else:  # Default search operation
+            if name:
+                numbers = contacts_handler.find_number(name)
+                if numbers:
+                    return f"{name}: {', '.join(numbers)}"
+                else:
+                    return f'No contact found for "{name}". Try a different name or use no name parameter to list all contacts.'
+            else:
+                all_numbers = contacts_handler.get_all_numbers()
+                contact_count = len(all_numbers)
+                
+                if contact_count == 0:
+                    return "No contacts found in the address book. Please make sure you have granted access to Contacts."
+                
+                # Format contacts for display (limit to first 50 to avoid overwhelming output)
+                contacts_list = []
+                for contact_name, phone_numbers in list(all_numbers.items())[:50]:
+                    contacts_list.append(f"{contact_name}: {', '.join(phone_numbers)}")
+                
+                result = f"Found {contact_count} contacts"
+                if contact_count > 50:
+                    result += " (showing first 50)"
+                result += ":\n\n" + "\n".join(contacts_list)
+                
+                return result
             
     except Exception as e:
         logger.error(f"Error in contacts tool: {e}")
@@ -109,11 +148,11 @@ def notes(
     folder_name: str = "Claude"
 ) -> str:
     """
-    Search, retrieve and create notes in Apple Notes app.
+    Search, retrieve, create, and delete notes in Apple Notes app.
     
     Args:
-        operation: Operation to perform: 'search', 'list', or 'create'
-        search_text: Text to search for in notes (required for search operation)
+        operation: Operation to perform: 'search', 'list', 'view', 'create', or 'delete'
+        search_text: Text to search for in notes (required for search, view, and delete operations)
         title: Title of the note to create (required for create operation)
         body: Content of the note to create (required for create operation)
         folder_name: Name of the folder to create the note in (optional for create, defaults to 'Claude')
@@ -132,6 +171,23 @@ def notes(
                 for note in results:
                     formatted_results.append(f"Title: {note['title']}\nContent: {note['content'][:200]}...")
                 return f"Found {len(results)} notes matching '{search_text}':\n\n" + "\n\n".join(formatted_results)
+            else:
+                return f"No notes found matching '{search_text}'"
+                
+        elif operation == "view":
+            if not search_text:
+                return "Note title is required for view operation"
+            
+            results = notes_handler.search_notes(search_text)
+            if results:
+                # Find exact title match or closest match
+                exact_match = next((note for note in results if note['title'].lower() == search_text.lower()), None)
+                if exact_match:
+                    return f"Title: {exact_match['title']}\n\nFull Content:\n{exact_match['content']}"
+                else:
+                    # Show first match with full content
+                    first_match = results[0]
+                    return f"Title: {first_match['title']}\n\nFull Content:\n{first_match['content']}"
             else:
                 return f"No notes found matching '{search_text}'"
                 
@@ -154,8 +210,18 @@ def notes(
                 return f"Successfully created note '{title}' in folder '{folder_name}'"
             else:
                 return f"Failed to create note: {result['message']}"
+                
+        elif operation == "delete":
+            if not search_text:
+                return "Search text is required for delete operation"
+            
+            result = notes_handler.delete_note(search_text)
+            if result["success"]:
+                return f"Successfully deleted note: {result['message']}"
+            else:
+                return f"Failed to delete note: {result['message']}"
         else:
-            return f"Unknown operation: {operation}. Valid operations are: search, list, create"
+            return f"Unknown operation: {operation}. Valid operations are: search, list, view, create, delete"
             
     except Exception as e:
         logger.error(f"Error in notes tool: {e}")
@@ -202,7 +268,11 @@ def messages(
             if messages_list:
                 formatted_messages = []
                 for msg in messages_list:
-                    formatted_messages.append(f"[{msg['time']}] {msg['sender']}: {msg['content']}")
+                    # Handle both old and new message format
+                    sender = msg.get('sender', 'Unknown')
+                    content = msg.get('content', '')
+                    time = msg.get('time', msg.get('date', ''))
+                    formatted_messages.append(f"[{time}] {sender}: {content}")
                 return f"Last {len(messages_list)} messages with {phone_number}:\n\n" + "\n".join(formatted_messages)
             else:
                 return f"No messages found with {phone_number}"
@@ -218,8 +288,15 @@ def messages(
                 return f"Failed to schedule message: {result['message']}"
                 
         elif operation == "unread":
-            unread_count = messages_handler.get_unread_count()
-            return f"You have {unread_count} unread messages"
+            # Get unread messages instead of just count
+            unread_messages = messages_handler.get_unread_messages(limit)
+            if unread_messages:
+                formatted_messages = []
+                for msg in unread_messages:
+                    formatted_messages.append(f"[{msg['date']}] {msg['sender']}: {msg['content']}")
+                return f"Found {len(unread_messages)} unread messages:\n\n" + "\n".join(formatted_messages)
+            else:
+                return "No unread messages found"
         else:
             return f"Unknown operation: {operation}. Valid operations are: send, read, schedule, unread"
             
@@ -323,7 +400,8 @@ def reminders(
     list_id: str = None,
     props: List[str] = None,
     notes: str = None,
-    due_date: str = None
+    due_date: str = None,
+    show_completed: bool = False
 ) -> str:
     """
     Search, create, and open reminders in Apple Reminders app.
@@ -337,20 +415,24 @@ def reminders(
         props: Properties to include in reminders (optional for listById operation)
         notes: Additional notes for reminder (optional for create operation)
         due_date: Due date for reminder in ISO format (optional for create operation)
+        show_completed: Whether to show completed reminders (default: False, shows only incomplete)
     
     Returns:
         String containing reminder information or operation result
     """
     try:
         if operation == "list":
-            result = reminders_handler.list_reminders()
+            result = reminders_handler.list_reminders(show_completed=show_completed)
             if result:
                 formatted_reminders = []
                 for reminder in result:
                     formatted_reminders.append(f"• {reminder['name']} (List: {reminder['list']})")
-                return f"Found {len(result)} reminders:\n\n" + "\n".join(formatted_reminders)
+                
+                status_text = "all" if show_completed else "incomplete"
+                return f"Found {len(formatted_reminders)} {status_text} reminders:\n\n" + "\n".join(formatted_reminders)
             else:
-                return "No reminders found"
+                status_text = "incomplete" if not show_completed else ""
+                return f"No {status_text} reminders found"
                 
         elif operation == "search":
             if not search_text:
@@ -514,35 +596,46 @@ def maps(
             if not query:
                 return "Search query is required for search operation"
             
-            result = maps_handler.search_locations(query, limit)
-            if result["success"]:
-                formatted_locations = []
-                for location in result["locations"]:
-                    formatted_locations.append(f"Name: {location['name']}\nAddress: {location['address']}")
-                return f"Found {len(result['locations'])} locations for '{query}':\n\n" + "\n\n".join(formatted_locations)
-            else:
-                return f"Search failed: {result['message']}"
+            try:
+                result = maps_handler.search_locations(query, limit)
+                logger.info(f"Maps search result: {result}")
+                if result["success"]:
+                    return result["message"]
+                else:
+                    return f"Search failed: {result['message']}"
+            except Exception as e:
+                logger.error(f"Exception in maps search: {e}")
+                return f"Error in maps search: {str(e)}"
                 
         elif operation == "save":
             if not name or not address:
                 return "Name and address are required for save operation"
             
             result = maps_handler.save_location(name, address)
-            return result["message"]
+            if result["success"]:
+                return result["message"]
+            else:
+                return f"Save failed: {result['message']}"
             
         elif operation == "pin":
             if not name or not address:
                 return "Name and address are required for pin operation"
             
             result = maps_handler.drop_pin(name, address)
-            return result["message"]
+            if result["success"]:
+                return result["message"]
+            else:
+                return f"Pin failed: {result['message']}"
             
         elif operation == "directions":
             if not from_address or not to_address:
                 return "From and to addresses are required for directions operation"
             
             result = maps_handler.get_directions(from_address, to_address, transport_type)
-            return result["message"]
+            if result["success"]:
+                return result["message"]
+            else:
+                return f"Directions failed: {result['message']}"
             
         elif operation == "listGuides":
             result = maps_handler.list_guides()
