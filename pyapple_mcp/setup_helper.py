@@ -19,14 +19,15 @@ from pathlib import Path
 def print_ascii_art():
     """Print the PyApple-MCP ASCII art logo."""
     print("""
-  _____              ,--./,-.      __   __  _____ _____  
- |  __ \\          / #       \\   |  \\/  |/ ____|  __ \\ 
- | |__) |  _   _   |          |   | \\  / | |    | |__) |
- |  ___/  | | |    \\  #    # /   | |\\/| | |    |  __ / 
- | |      | |_| |   \\       /    | |   | | |____| |     
- |_|      \\__, |     '--.-'      |_|   |_\\_____|_|     
-           __/ /                                     
-          |___/                                      
+          
+  _____              ,--./,-.     __   __  _____ ____
+ |  __ \           / #       \   |  \/  |/ ____|  __ \\
+ | |__) |  _   _   |          |  | \  / | |    | |__) |
+ |  ___/  | | | |  \  #    #  /  | |\/| | |    |  __ /
+ | |      | |_| |   \        /   | |  | | |____| |
+ |_|       \__, |     '--.-'     |_|  |_ \_____|_|
+           __/ /
+          |___/
 
 PyApple-MCP Setup Helper
 ========================
@@ -34,25 +35,29 @@ Apple App Integration for Claude AI (macOS Only)
 """)
 
 
+
+
 def find_executable():
-    """Find the full path to the pyapple-mcp executable."""
-    # Try to find the executable in the PATH
+    """Find the full path to the pyapple-mcp executable on macOS."""
     exe_name = "pyapple-mcp"
-    if sys.platform == "win32":
-        exe_name += ".exe"
     
     exe_path = shutil.which(exe_name)
     if exe_path:
         print(f"Found pyapple-mcp in PATH at: {exe_path}")
         return exe_path
     
-    # If not found in PATH, try to find it in common installation directories
+    # If not found in PATH, try to find it in common macOS installation directories
     potential_paths = []
     
-    # User site-packages
-    import site
-    for site_path in site.getsitepackages():
-        potential_paths.append(Path(site_path) / "bin" / exe_name)
+    # Python framework locations (common on macOS)
+    import glob
+    framework_bins = glob.glob("/Library/Frameworks/Python.framework/Versions/*/bin")
+    for bin_path in framework_bins:
+        potential_paths.append(Path(bin_path) / exe_name)
+    
+    # Homebrew locations
+    potential_paths.append(Path("/usr/local/bin") / exe_name)
+    potential_paths.append(Path("/opt/homebrew/bin") / exe_name)
     
     # User's home directory
     potential_paths.append(Path.home() / ".local" / "bin" / exe_name)
@@ -61,38 +66,40 @@ def find_executable():
     if "VIRTUAL_ENV" in os.environ:
         potential_paths.append(Path(os.environ["VIRTUAL_ENV"]) / "bin" / exe_name)
     
-    # Additional common locations for macOS
-    if sys.platform == "darwin":  # macOS
-        potential_paths.append(Path("/usr/local/bin") / exe_name)
-        potential_paths.append(Path("/opt/homebrew/bin") / exe_name)
-        # uv paths
-        potential_paths.append(Path.home() / ".astral" / "uv" / "bin" / exe_name)
-        potential_paths.append(Path.home() / ".uv" / "bin" / exe_name)
-        # Python user bin
-        import glob
-        python_user_bins = glob.glob(str(Path.home() / "Library" / "Python" / "*" / "bin"))
-        for bin_path in python_user_bins:
-            potential_paths.append(Path(bin_path) / exe_name)
+    # uv paths
+    potential_paths.append(Path.home() / ".astral" / "uv" / "bin" / exe_name)
+    potential_paths.append(Path.home() / ".uv" / "bin" / exe_name)
+    
+    # Python user bin directories
+    python_user_bins = glob.glob(str(Path.home() / "Library" / "Python" / "*" / "bin"))
+    for bin_path in python_user_bins:
+        potential_paths.append(Path(bin_path) / exe_name)
+    
+    # User site-packages
+    import site
+    try:
+        for site_path in site.getsitepackages():
+            potential_paths.append(Path(site_path) / "bin" / exe_name)
+    except:
+        pass
     
     for path in potential_paths:
         if path.exists() and os.access(path, os.X_OK):
             print(f"Found pyapple-mcp at: {path}")
             return str(path)
     
-    # If still not found, search in common directories
+    # If still not found, search using find command
     print("Searching for pyapple-mcp in common locations...")
     try:
-        # On Unix-like systems, try using the 'find' command
-        if sys.platform != 'win32':
-            import subprocess
-            result = subprocess.run(
-                ["find", os.path.expanduser("~"), "-name", "pyapple-mcp", "-type", "f", "-executable"],
-                capture_output=True, text=True, timeout=10
-            )
-            paths = result.stdout.strip().split('\n')
-            if paths and paths[0]:
-                print(f"Found pyapple-mcp at {paths[0]}")
-                return paths[0]
+        import subprocess
+        result = subprocess.run(
+            ["find", os.path.expanduser("~"), "/usr/local", "/opt", "/Library", "-name", "pyapple-mcp", "-type", "f", "-executable"],
+            capture_output=True, text=True, timeout=15
+        )
+        paths = result.stdout.strip().split('\n')
+        if paths and paths[0]:
+            print(f"Found pyapple-mcp at {paths[0]}")
+            return paths[0]
     except Exception as e:
         print(f"Error searching for pyapple-mcp: {e}")
     
@@ -102,27 +109,12 @@ def find_executable():
 
 
 def find_claude_config():
-    """Find Claude Desktop config file path."""
-    config_paths = []
-    
-    # macOS
-    if sys.platform == "darwin":
+    """Find Claude Desktop config file path on macOS."""
+    config_paths = [
         # Try both old and new paths
-        config_paths.append(Path.home() / "Library" / "Application Support" / "Claude" / "claude_desktop_config.json")
-        config_paths.append(Path.home() / "Library" / "Application Support" / "Claude Desktop" / "claude_desktop_config.json")
-    
-    # Windows
-    elif sys.platform == "win32":
-        appdata = os.environ.get("APPDATA")
-        if appdata:
-            config_paths.append(Path(appdata) / "Claude" / "claude_desktop_config.json")
-            config_paths.append(Path(appdata) / "Claude Desktop" / "claude_desktop_config.json")
-    
-    # Linux
-    else:
-        config_home = os.environ.get('XDG_CONFIG_HOME', Path.home() / '.config')
-        config_paths.append(Path(config_home) / "Claude" / "claude_desktop_config.json")
-        config_paths.append(Path(config_home) / "Claude Desktop" / "claude_desktop_config.json")
+        Path.home() / "Library" / "Application Support" / "Claude Desktop" / "claude_desktop_config.json",
+        Path.home() / "Library" / "Application Support" / "Claude" / "claude_desktop_config.json"
+    ]
     
     # Check all possible locations
     for path in config_paths:
@@ -130,17 +122,8 @@ def find_claude_config():
             print(f"Found Claude Desktop config at: {path}")
             return path
     
-    # Return the default path for the platform if not found
-    # We'll use the newer "Claude Desktop" path as default
-    if sys.platform == "darwin":  # macOS
-        default_path = Path.home() / "Library" / "Application Support" / "Claude Desktop" / "claude_desktop_config.json"
-    elif sys.platform == "win32":  # Windows
-        appdata = os.environ.get("APPDATA", "")
-        default_path = Path(appdata) / "Claude Desktop" / "claude_desktop_config.json"
-    else:  # Linux and others
-        config_home = os.environ.get('XDG_CONFIG_HOME', Path.home() / '.config')
-        default_path = Path(config_home) / "Claude Desktop" / "claude_desktop_config.json"
-    
+    # Return the default path (newer "Claude Desktop" path)
+    default_path = Path.home() / "Library" / "Application Support" / "Claude Desktop" / "claude_desktop_config.json"
     print(f"Claude Desktop config not found. Using default path: {default_path}")
     return default_path
 
@@ -169,6 +152,7 @@ def update_claude_config(config_path, pyapple_mcp_path):
         config["mcpServers"] = {}
     
     # Add or update pyapple config
+    # Always use the full path to ensure it works regardless of PATH
     config["mcpServers"]["pyapple"] = {
         "command": pyapple_mcp_path
     }
@@ -188,15 +172,16 @@ def update_claude_config(config_path, pyapple_mcp_path):
 def check_macos_requirements():
     """Check if we're on macOS and warn about permissions."""
     if sys.platform != "darwin":
-        print("\n⚠️  WARNING: PyApple-MCP is designed for macOS only!")
-        print("   It requires Apple's native frameworks to work with system applications.")
+        print("\n❌ ERROR: PyApple-MCP requires macOS!")
+        print("   This tool integrates with Apple's native applications and frameworks")
+        print("   which are only available on macOS.")
         if sys.platform == "win32":
             print("   Detected: Windows")
         elif sys.platform.startswith("linux"):
             print("   Detected: Linux")
         else:
             print(f"   Detected: {sys.platform}")
-        print("\n   PyApple-MCP will not function properly on this system.")
+        print("\n   PyApple-MCP cannot function on this system.")
         return False
     
     print("\n✅ macOS detected - compatible system!")
@@ -233,9 +218,29 @@ def print_usage_info():
     print("🔍 web_search  - Search the web with DuckDuckGo")
 
 
+def print_path_instructions(exe_path):
+    """Print instructions for adding executable to PATH if needed."""
+    exe_dir = os.path.dirname(exe_path)
+    
+    # Check if the directory is already in PATH
+    current_path = os.environ.get('PATH', '')
+    if exe_dir in current_path.split(os.pathsep):
+        return  # Already in PATH
+    
+    print(f"\n💡 Optional: Add to PATH")
+    print("=" * 25)
+    print(f"\nTo run pyapple-mcp-setup from anywhere, add this to your shell profile:")
+    print(f"export PATH=\"{exe_dir}:$PATH\"")
+    print("\nAdd this line to:")
+    print("• ~/.bashrc (for Bash)")
+    print("• ~/.zshrc (for Zsh)")
+    print("• ~/.bash_profile (for macOS Terminal)")
+    print("\nThen restart your terminal or run: source ~/.zshrc")
+
+
 def main(cli_args=None):
     """Main function to run the setup helper."""
-    parser = argparse.ArgumentParser(description="Configure pyapple-mcp for Claude Desktop")
+    parser = argparse.ArgumentParser(description="Configure pyapple-mcp for Claude Desktop on macOS")
     parser.add_argument("--config-path", help="Path to Claude Desktop config file")
     parser.add_argument("--skip-checks", action="store_true", help="Skip macOS compatibility checks")
     
@@ -255,6 +260,7 @@ def main(cli_args=None):
     if not args.skip_checks:
         if not check_macos_requirements():
             print("\nSetup cannot continue on non-macOS systems.")
+            print("PyApple-MCP requires macOS to integrate with Apple applications.")
             return 1
     
     # Find pyapple-mcp executable
@@ -293,6 +299,7 @@ def main(cli_args=None):
             # Print additional info
             print_permissions_info()
             print_usage_info()
+            print_path_instructions(exe_path)
             
             print("\n📖 Next Steps:")
             print("1. Grant macOS permissions when prompted")

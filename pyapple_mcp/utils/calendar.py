@@ -42,28 +42,55 @@ class CalendarHandler:
             end_date = datetime.now() + timedelta(days=30)
             to_date = end_date.isoformat()
         
+        # Parse dates to proper format for AppleScript
+        try:
+            start_dt = datetime.fromisoformat(from_date[:10])
+            end_dt = datetime.fromisoformat(to_date[:10])
+            
+            # Format for AppleScript (MM/DD/YYYY)
+            start_date_str = start_dt.strftime("%m/%d/%Y")
+            end_date_str = end_dt.strftime("%m/%d/%Y")
+        except ValueError as e:
+            logger.error(f"Date parsing error: {e}")
+            return []
+        
+        # Escape quotes in search text
+        safe_search_text = search_text.replace('"', '\\"')
+        
         script = f'''
         tell application "Calendar"
             set eventsList to {{}}
-            set searchText to "{search_text}"
+            set searchText to "{safe_search_text}"
             set eventLimit to {limit}
             set eventCount to 0
             
             try
-                set startDate to date "{from_date[:10]}"
-                set endDate to date "{to_date[:10]}"
+                set startDate to date "{start_date_str}"
+                set endDate to date "{end_date_str} 11:59:59 PM"
                 
                 repeat with aCalendar in calendars
                     if eventCount >= eventLimit then exit repeat
                     
-                    set calendarEvents to (every event of aCalendar whose start date >= startDate and end date <= endDate)
+                    -- Better date range logic: find events that overlap with our date range
+                    set calendarEvents to (every event of aCalendar whose (start date <= endDate) and (end date >= startDate))
                     
                     repeat with anEvent in calendarEvents
                         if eventCount >= eventLimit then exit repeat
                         
                         set eventTitle to summary of anEvent
-                        set eventLocation to location of anEvent
-                        set eventDescription to description of anEvent
+                        
+                        -- Handle potentially empty values
+                        try
+                            set eventLocation to location of anEvent
+                        on error
+                            set eventLocation to ""
+                        end try
+                        
+                        try
+                            set eventDescription to description of anEvent
+                        on error
+                            set eventDescription to ""
+                        end try
                         
                         if (eventTitle contains searchText) or (eventLocation contains searchText) or (eventDescription contains searchText) then
                             set eventStart to start date of anEvent
@@ -139,8 +166,20 @@ class CalendarHandler:
         if not from_date:
             from_date = datetime.now().isoformat()
         if not to_date:
-            end_date = datetime.now() + timedelta(days=7)
+            end_date = datetime.now() + timedelta(days=1)  # Default to just today + 1 day
             to_date = end_date.isoformat()
+        
+        # Parse dates to proper format for AppleScript
+        try:
+            start_dt = datetime.fromisoformat(from_date[:10])
+            end_dt = datetime.fromisoformat(to_date[:10])
+            
+            # Format for AppleScript (MM/DD/YYYY)
+            start_date_str = start_dt.strftime("%m/%d/%Y")
+            end_date_str = end_dt.strftime("%m/%d/%Y")
+        except ValueError as e:
+            logger.error(f"Date parsing error: {e}")
+            return []
         
         script = f'''
         tell application "Calendar"
@@ -149,20 +188,33 @@ class CalendarHandler:
             set eventCount to 0
             
             try
-                set startDate to date "{from_date[:10]}"
-                set endDate to date "{to_date[:10]}"
+                set startDate to date "{start_date_str}"
+                set endDate to date "{end_date_str} 11:59:59 PM"
                 
                 repeat with aCalendar in calendars
                     if eventCount >= eventLimit then exit repeat
                     
-                    set calendarEvents to (every event of aCalendar whose start date >= startDate and end date <= endDate)
+                    -- Better date range logic: find events that overlap with our date range
+                    set calendarEvents to (every event of aCalendar whose (start date <= endDate) and (end date >= startDate))
                     
                     repeat with anEvent in calendarEvents
                         if eventCount >= eventLimit then exit repeat
                         
                         set eventTitle to summary of anEvent
-                        set eventLocation to location of anEvent
-                        set eventDescription to description of anEvent
+                        
+                        -- Handle potentially empty values
+                        try
+                            set eventLocation to location of anEvent
+                        on error
+                            set eventLocation to ""
+                        end try
+                        
+                        try
+                            set eventDescription to description of anEvent
+                        on error
+                            set eventDescription to ""
+                        end try
+                        
                         set eventStart to start date of anEvent
                         set eventEnd to end date of anEvent
                         set eventCalendar to title of aCalendar

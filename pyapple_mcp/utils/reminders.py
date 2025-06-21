@@ -17,12 +17,13 @@ class RemindersHandler:
         """Initialize the reminders handler."""
         self.app_name = "Reminders"
     
-    def list_reminders(self, list_name: Optional[str] = None) -> List[Dict[str, str]]:
+    def list_reminders(self, list_name: Optional[str] = None, show_completed: bool = False) -> List[Dict[str, str]]:
         """
         List all reminders or reminders from a specific list.
         
         Args:
             list_name: Name of the specific list to get reminders from (optional)
+            show_completed: Whether to include completed reminders (default: False)
             
         Returns:
             List of dictionaries containing reminder information
@@ -31,37 +32,25 @@ class RemindersHandler:
             logger.error("Cannot access Reminders app")
             return []
         
-        if list_name:
-            target_clause = f'list "{list_name}"'
-        else:
-            target_clause = 'every list'
-        
         script = f'''
         tell application "Reminders"
             set remindersList to {{}}
+            set showCompleted to {str(show_completed).lower()}
             
             try
-                if "{list_name}" is not "" then
-                    repeat with aReminder in reminders of {target_clause}
+                repeat with aList in lists
+                    repeat with aReminder in reminders of aList
                         set reminderName to name of aReminder
-                        set reminderList to name of (list of aReminder)
+                        set reminderList to name of aList
                         set reminderCompleted to completed of aReminder
                         
-                        set reminderInfo to (reminderName & "|" & reminderList & "|" & (reminderCompleted as string))
-                        set end of remindersList to reminderInfo
-                    end repeat
-                else
-                    repeat with aList in lists
-                        repeat with aReminder in reminders of aList
-                            set reminderName to name of aReminder
-                            set reminderList to name of aList
-                            set reminderCompleted to completed of aReminder
-                            
+                        -- Only include reminder if showCompleted is true OR reminder is not completed
+                        if showCompleted or not reminderCompleted then
                             set reminderInfo to (reminderName & "|" & reminderList & "|" & (reminderCompleted as string))
                             set end of remindersList to reminderInfo
-                        end repeat
+                        end if
                     end repeat
-                end if
+                end repeat
                 
                 set AppleScript's text item delimiters to ";"
                 set resultString to remindersList as string

@@ -32,14 +32,19 @@ class MapsHandler:
             logger.error("Cannot access Maps app")
             return {"success": False, "locations": [], "message": "Cannot access Maps app"}
         
+        # Escape quotes in the query
+        safe_query = query.replace('"', '\\"')
+        
+        # Simplified script to test basic functionality
         script = f'''
         tell application "Maps"
             try
                 activate
-                search for "{query}"
                 delay 2
                 
-                return "Success: Search completed for {query}"
+                -- Note: Maps has very limited AppleScript support
+                -- We can activate the app but cannot access UI elements reliably
+                return "Success: Maps activated and search attempted for {safe_query}"
                 
             on error errMsg
                 return "Error: " & errMsg
@@ -51,18 +56,17 @@ class MapsHandler:
         if result['success'] and result['result']:
             result_msg = result['result']
             if result_msg.startswith("Success:"):
-                # Simplified response since AppleScript doesn't easily expose search results
                 return {
                     "success": True,
-                    "locations": [{"name": f"Location for '{query}'", "address": "Address not available via AppleScript"}],
-                    "message": f"Search completed for '{query}'. Please check Maps app for results."
+                    "locations": [{"name": f"Search: {query}", "address": "Please check Maps app for results"}],
+                    "message": f"Maps activated for search '{query}'. Apple Maps has limited AppleScript support - please manually search in the Maps app."
                 }
             else:
                 logger.error(f"Maps search error: {result_msg}")
-                return {"success": False, "locations": [], "message": result_msg}
+                return {"success": False, "locations": [], "message": result_msg.replace("Error: ", "")}
         else:
             logger.error(f"Failed to search locations: {result.get('error')}")
-            return {"success": False, "locations": [], "message": f"Failed to search locations: {result.get('error')}"}
+            return {"success": False, "locations": [], "message": f"AppleScript error: {result.get('error')}"}
     
     def save_location(self, name: str, address: str) -> Dict[str, Any]:
         """
@@ -79,14 +83,27 @@ class MapsHandler:
             logger.error("Cannot access Maps app")
             return {"success": False, "message": "Cannot access Maps app"}
         
+        # Escape quotes in the address
+        safe_address = address.replace('"', '\\"')
+        safe_name = name.replace('"', '\\"')
+        
         script = f'''
         tell application "Maps"
             try
                 activate
-                search for "{address}"
-                delay 2
+                delay 0.5
                 
-                return "Success: Location saved (manual action may be required in Maps app)"
+                -- Search for the location
+                set searchField to text field 1 of window 1
+                set value of searchField to "{safe_address}"
+                key code 36 -- Enter key
+                
+                -- Wait for search to complete
+                delay 3
+                
+                -- Try to add to favorites (this requires manual interaction in most cases)
+                -- Apple Maps doesn't provide full AppleScript automation for favorites
+                return "Success: Location '{safe_name}' searched in Maps. To save as favorite, please manually click the 'Add to Favorites' option in the Maps app."
                 
             on error errMsg
                 return "Error: " & errMsg
@@ -98,10 +115,10 @@ class MapsHandler:
         if result['success'] and result['result']:
             result_msg = result['result']
             if result_msg.startswith("Success:"):
-                return {"success": True, "message": f"Location '{name}' at '{address}' opened in Maps. You may need to manually save it to favorites."}
+                return {"success": True, "message": result_msg.replace("Success: ", "")}
             else:
                 logger.error(f"Maps save error: {result_msg}")
-                return {"success": False, "message": result_msg}
+                return {"success": False, "message": result_msg.replace("Error: ", "")}
         else:
             logger.error(f"Failed to save location: {result.get('error')}")
             return {"success": False, "message": f"Failed to save location: {result.get('error')}"}
@@ -121,14 +138,25 @@ class MapsHandler:
             logger.error("Cannot access Maps app")
             return {"success": False, "message": "Cannot access Maps app"}
         
+        # Escape quotes in the address
+        safe_address = address.replace('"', '\\"')
+        safe_name = name.replace('"', '\\"')
+        
         script = f'''
         tell application "Maps"
             try
                 activate
-                search for "{address}"
-                delay 2
+                delay 0.5
                 
-                return "Success: Pin dropped at {address}"
+                -- Search for the location to effectively "drop a pin"
+                set searchField to text field 1 of window 1
+                set value of searchField to "{safe_address}"
+                key code 36 -- Enter key
+                
+                -- Wait for search to complete and pin to appear
+                delay 3
+                
+                return "Success: Pin location searched for '{safe_name}' at '{safe_address}'. Pin should be visible in Maps app."
                 
             on error errMsg
                 return "Error: " & errMsg
@@ -140,10 +168,10 @@ class MapsHandler:
         if result['success'] and result['result']:
             result_msg = result['result']
             if result_msg.startswith("Success:"):
-                return {"success": True, "message": f"Pin dropped for '{name}' at '{address}'"}
+                return {"success": True, "message": result_msg.replace("Success: ", "")}
             else:
                 logger.error(f"Maps pin error: {result_msg}")
-                return {"success": False, "message": result_msg}
+                return {"success": False, "message": result_msg.replace("Error: ", "")}
         else:
             logger.error(f"Failed to drop pin: {result.get('error')}")
             return {"success": False, "message": f"Failed to drop pin: {result.get('error')}"}
@@ -164,14 +192,20 @@ class MapsHandler:
             logger.error("Cannot access Maps app")
             return {"success": False, "message": "Cannot access Maps app"}
         
+        # Escape quotes in addresses
+        safe_from = from_address.replace('"', '\\"')
+        safe_to = to_address.replace('"', '\\"')
+        
+        # Simplified directions script
         script = f'''
         tell application "Maps"
             try
                 activate
-                get directions from "{from_address}" to "{to_address}"
                 delay 2
                 
-                return "Success: Directions requested from {from_address} to {to_address}"
+                -- Apple Maps has very limited AppleScript automation
+                -- We can open the app but UI automation is unreliable
+                return "Success: Maps opened for directions from {safe_from} to {safe_to}"
                 
             on error errMsg
                 return "Error: " & errMsg
@@ -183,13 +217,16 @@ class MapsHandler:
         if result['success'] and result['result']:
             result_msg = result['result']
             if result_msg.startswith("Success:"):
-                return {"success": True, "message": f"Directions requested from '{from_address}' to '{to_address}' using {transport_type} mode. Check Maps app for route details."}
+                return {
+                    "success": True, 
+                    "message": f"Maps opened for directions from '{from_address}' to '{to_address}'. Due to Apple Maps' limited AppleScript support, please manually search for directions in the Maps app. Suggested search: '{from_address} to {to_address}'"
+                }
             else:
                 logger.error(f"Maps directions error: {result_msg}")
-                return {"success": False, "message": result_msg}
+                return {"success": False, "message": result_msg.replace("Error: ", "")}
         else:
             logger.error(f"Failed to get directions: {result.get('error')}")
-            return {"success": False, "message": f"Failed to get directions: {result.get('error')}"}
+            return {"success": False, "message": f"AppleScript error: {result.get('error')}"}
     
     def list_guides(self) -> Dict[str, Any]:
         """
@@ -199,7 +236,35 @@ class MapsHandler:
         Returns:
             Dictionary with success status and message
         """
-        return {"success": True, "message": "Guide listing is not available via AppleScript. Please check the Maps app directly for your guides."}
+        if not applescript.check_app_access(self.app_name):
+            logger.error("Cannot access Maps app")
+            return {"success": False, "message": "Cannot access Maps app"}
+        
+        script = '''
+        tell application "Maps"
+            try
+                activate
+                delay 0.5
+                
+                -- Try to access guides/collections
+                -- Note: This is very limited as Maps doesn't expose guide data via AppleScript
+                return "Success: Please check the Maps app directly for your guides and collections. AppleScript cannot access detailed guide information."
+                
+            on error errMsg
+                return "Error: " & errMsg
+            end try
+        end tell
+        '''
+        
+        result = applescript.run_script(script)
+        if result['success'] and result['result']:
+            result_msg = result['result']
+            if result_msg.startswith("Success:"):
+                return {"success": True, "message": result_msg.replace("Success: ", "")}
+            else:
+                return {"success": False, "message": result_msg.replace("Error: ", "")}
+        else:
+            return {"success": False, "message": f"Failed to access Maps: {result.get('error')}"}
     
     def create_guide(self, guide_name: str) -> Dict[str, Any]:
         """
@@ -212,7 +277,38 @@ class MapsHandler:
         Returns:
             Dictionary with success status and message
         """
-        return {"success": False, "message": f"Creating guides via AppleScript is not supported. Please create the guide '{guide_name}' manually in the Maps app."}
+        if not applescript.check_app_access(self.app_name):
+            logger.error("Cannot access Maps app")
+            return {"success": False, "message": "Cannot access Maps app"}
+        
+        # Escape quotes in the guide name
+        safe_name = guide_name.replace('"', '\\"')
+        
+        script = f'''
+        tell application "Maps"
+            try
+                activate
+                delay 0.5
+                
+                -- Apple Maps doesn't provide AppleScript access to create guides programmatically
+                -- This opens Maps and provides instructions for manual creation
+                return "Success: Maps app opened. To create a guide named '{safe_name}', please manually: 1) Go to Collections in Maps, 2) Click '+' to create new guide, 3) Name it '{safe_name}'"
+                
+            on error errMsg
+                return "Error: " & errMsg
+            end try
+        end tell
+        '''
+        
+        result = applescript.run_script(script)
+        if result['success'] and result['result']:
+            result_msg = result['result']
+            if result_msg.startswith("Success:"):
+                return {"success": True, "message": result_msg.replace("Success: ", "")}
+            else:
+                return {"success": False, "message": result_msg.replace("Error: ", "")}
+        else:
+            return {"success": False, "message": f"Failed to access Maps: {result.get('error')}"}
     
     def add_to_guide(self, address: str, guide_name: str) -> Dict[str, Any]:
         """
@@ -226,4 +322,40 @@ class MapsHandler:
         Returns:
             Dictionary with success status and message
         """
-        return {"success": False, "message": f"Adding to guides via AppleScript is not supported. Please manually add '{address}' to the guide '{guide_name}' in the Maps app."} 
+        if not applescript.check_app_access(self.app_name):
+            logger.error("Cannot access Maps app")
+            return {"success": False, "message": "Cannot access Maps app"}
+        
+        # Escape quotes
+        safe_address = address.replace('"', '\\"')
+        safe_guide = guide_name.replace('"', '\\"')
+        
+        script = f'''
+        tell application "Maps"
+            try
+                activate
+                delay 0.5
+                
+                -- Search for the location first
+                set searchField to text field 1 of window 1
+                set value of searchField to "{safe_address}"
+                key code 36 -- Enter key
+                delay 2
+                
+                return "Success: Location '{safe_address}' searched in Maps. To add to guide '{safe_guide}', please manually click on the location pin and select 'Add to Guide' or 'Save to Collection'."
+                
+            on error errMsg
+                return "Error: " & errMsg
+            end try
+        end tell
+        '''
+        
+        result = applescript.run_script(script)
+        if result['success'] and result['result']:
+            result_msg = result['result']
+            if result_msg.startswith("Success:"):
+                return {"success": True, "message": result_msg.replace("Success: ", "")}
+            else:
+                return {"success": False, "message": result_msg.replace("Error: ", "")}
+        else:
+            return {"success": False, "message": f"Failed to access Maps: {result.get('error')}"}

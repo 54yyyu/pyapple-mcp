@@ -235,8 +235,8 @@ class MailHandler:
         safe_bcc = bcc.replace('"', '\\"') if bcc else ""
         
         # Build CC and BCC clauses
-        cc_clause = f'set cc recipients to "{safe_cc}"' if cc else ""
-        bcc_clause = f'set bcc recipients to "{safe_bcc}"' if bcc else ""
+        cc_clause = f'make new cc recipient with properties {{address:"{safe_cc}"}}' if cc else ""
+        bcc_clause = f'make new bcc recipient with properties {{address:"{safe_bcc}"}}' if bcc else ""
         
         script = f'''
         tell application "Mail"

@@ -10,6 +10,7 @@ from typing import Dict, List, Any
 from bs4 import BeautifulSoup
 import re
 from urllib.parse import urljoin, urlparse
+import anyio
 
 logger = logging.getLogger(__name__)
 
@@ -18,10 +19,29 @@ class WebSearchHandler:
     
     def __init__(self):
         """Initialize the web search handler."""
-        self.base_url = "https://duckduckgo.com"
+        self.base_url = "https://html.duckduckgo.com"  # Updated to use the correct domain
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
+    
+    async def _get_vqd(self, client: httpx.AsyncClient, query: str) -> str:
+        """
+        Get the vqd token required for DuckDuckGo search.
+        
+        Args:
+            client: HTTP client instance
+            query: Search query
+            
+        Returns:
+            vqd token string
+        """
+        # First, hit the main DDG page to harvest the vqd value
+        r = await client.get("https://duckduckgo.com", params={'q': query})
+        r.raise_for_status()
+        m = re.search(r'vqd=([\d-]+)&', r.text)
+        if not m:
+            raise RuntimeError("Could not find vqd token")
+        return m.group(1)
     
     async def search_web(self, query: str, max_results: int = 5) -> Dict[str, Any]:
         """
@@ -36,36 +56,42 @@ class WebSearchHandler:
         """
         try:
             async with httpx.AsyncClient(timeout=30.0, headers=self.headers) as client:
-                # First, get the search results page
+                # Get the vqd token required for search
+                vqd = await self._get_vqd(client, query)
+                
+                # Perform the search with vqd token
                 search_url = f"{self.base_url}/html/"
                 params = {
                     'q': query,
-                    'kl': 'us-en'
+                    'kl': 'us-en',
+                    'vqd': vqd
                 }
                 
-                response = await client.get(search_url, params=params)
+                response = await client.get(search_url, params=params, follow_redirects=True)
                 response.raise_for_status()
                 
-                # Parse the search results
+                # Parse the search results with updated selectors
                 soup = BeautifulSoup(response.text, 'html.parser')
                 results = []
                 
-                # Find search result links
-                result_links = soup.find_all('a', {'class': 'result__a'})
+                # Use improved selector that works with current DuckDuckGo structure
+                result_blocks = soup.select("div.result")
                 
-                for i, link in enumerate(result_links[:max_results]):
+                for block in result_blocks[:max_results]:
                     try:
+                        # Find the main result link
+                        a = block.select_one("a.result__a")
+                        if not a:  # Skip ads or malformed results
+                            continue
+                            
                         # Extract basic information
-                        title = link.get_text(strip=True)
-                        url = link.get('href', '')
+                        title = a.get_text(" ", strip=True)
+                        url = a.get('href', '')
                         
-                        # Get snippet from the result container
-                        result_container = link.find_parent('div', {'class': 'result'})
-                        snippet = ""
-                        if result_container:
-                            snippet_elem = result_container.find('div', {'class': 'result__snippet'})
-                            if snippet_elem:
-                                snippet = snippet_elem.get_text(strip=True)
+                        # Get snippet with fallback selectors
+                        snippet_elem = (block.select_one("div.result__snippet") or 
+                                      block.select_one("span.result__snippet"))
+                        snippet = snippet_elem.get_text(" ", strip=True) if snippet_elem else ""
                         
                         # Try to fetch and extract content from the actual page
                         page_content = await self._extract_page_content(client, url)
@@ -78,7 +104,7 @@ class WebSearchHandler:
                         })
                         
                     except Exception as e:
-                        logger.warning(f"Error processing search result {i}: {e}")
+                        logger.warning(f"Error processing search result: {e}")
                         continue
                 
                 return {
@@ -106,19 +132,34 @@ class WebSearchHandler:
         Returns:
             Dictionary with success status, results list, and any error message
         """
-        import asyncio
-        
         try:
-            # Create new event loop if none exists
+            # Try anyio first, fall back to asyncio if needed
             try:
-                loop = asyncio.get_event_loop()
-                if loop.is_closed():
-                    raise RuntimeError("Event loop is closed")
-            except RuntimeError:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-            
-            return loop.run_until_complete(self.search_web(query, max_results))
+                return anyio.run(self.search_web, query, max_results)
+            except RuntimeError as e:
+                if "asyncio" in str(e).lower():
+                    # Fallback for environments where anyio doesn't work
+                    import asyncio
+                    
+                    try:
+                        loop = asyncio.get_event_loop()
+                        if loop.is_running():
+                            # We're in an async context, create a new thread
+                            import concurrent.futures
+                            with concurrent.futures.ThreadPoolExecutor() as executor:
+                                future = executor.submit(asyncio.run, self.search_web(query, max_results))
+                                return future.result()
+                        else:
+                            return loop.run_until_complete(self.search_web(query, max_results))
+                    except RuntimeError:
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
+                        try:
+                            return loop.run_until_complete(self.search_web(query, max_results))
+                        finally:
+                            loop.close()
+                else:
+                    raise
         except Exception as e:
             logger.error(f"Sync web search failed: {e}")
             return {
@@ -144,7 +185,19 @@ class WebSearchHandler:
             if not parsed.scheme or not parsed.netloc:
                 return "Invalid URL"
             
-            response = await client.get(url, timeout=10.0)
+            # Enhanced headers to avoid blocking
+            extra_headers = {
+                "Accept-Language": "en-US,en;q=0.9",
+                "Accept": "text/html,application/xhtml+xml",
+                "Referer": "https://duckduckgo.com/"
+            }
+            
+            response = await client.get(
+                url, 
+                headers={**self.headers, **extra_headers},
+                timeout=10.0,
+                follow_redirects=True
+            )
             response.raise_for_status()
             
             # Parse the page content
@@ -167,6 +220,10 @@ class WebSearchHandler:
             
             return text
             
+        except (httpx.HTTPStatusError, httpx.TimeoutException) as e:
+            # Catch 4XX/5XX explicitly so one bad site doesn't kill the loop
+            logger.warning(f"HTTP error fetching content from {url}: {e}")
+            return "Content not available (HTTP error)"
         except Exception as e:
             logger.warning(f"Failed to extract content from {url}: {e}")
             return "Content not available"
@@ -184,4 +241,4 @@ def search_web(query: str, max_results: int = 5) -> Dict[str, Any]:
         Dictionary with success status, results list, and any error message
     """
     handler = WebSearchHandler()
-    return handler.search_web_sync(query, max_results) 
+    return handler.search_web_sync(query, max_results)
