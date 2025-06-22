@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PyApple MCP Tools - Documentation</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="nav-container">
+                <div class="logo">
+                    <h1>PyApple MCP</h1>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#installation">Installation</a></li>
+                    <li><a href="#usage">Usage</a></li>
+                    <li><a href="#api">API Reference</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="home" class="hero">
+            <div class="hero-content">
+                <h1>PyApple MCP Tools</h1>
+                <p class="hero-subtitle">Python implementation of Apple-native tools for the Model Context Protocol</p>
+                <div class="hero-badges">
+                    <img src="https://img.shields.io/badge/python-3.9+-blue.svg" alt="Python 3.9+">
+                    <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="MIT License">
+                    <img src="https://img.shields.io/badge/MCP-compatible-purple.svg" alt="MCP Compatible">
+                </div>
+                <div class="hero-buttons">
+                    <a href="#installation" class="btn btn-primary">Get Started</a>
+                    <a href="https://github.com/54yyyu/pyapple-mcp" class="btn btn-secondary">View on GitHub</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="section">
+            <div class="container">
+                <h2>Features</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3>🗨️ Messages</h3>
+                        <p>Send and read messages using the Apple Messages app</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>📝 Notes</h3>
+                        <p>List, search, create, and delete notes in Apple Notes app</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>👥 Contacts</h3>
+                        <p>Search contacts from Apple Contacts</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>📧 Mail</h3>
+                        <p>Send emails, search messages, and manage mail with optimized local database search</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>⏰ Reminders</h3>
+                        <p>List, search, and create reminders in Apple Reminders app</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>📅 Calendar</h3>
+                        <p>Search events, create calendar entries, and manage your schedule</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>🔍 Web Search</h3>
+                        <p>Search the web using DuckDuckGo</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>🗺️ Maps</h3>
+                        <p>Search locations, get directions, and manage guides with Apple Maps</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="installation" class="section bg-light">
+            <div class="container">
+                <h2>Installation</h2>
+                
+                <div class="install-methods">
+                    <div class="install-card">
+                        <h3>Automated Setup (Recommended)</h3>
+                        <div class="code-block">
+                            <pre><code># Install pyapple-mcp
+pip install pyapple-mcp
+
+# Run the setup helper to configure Claude Desktop
+pyapple-mcp-setup</code></pre>
+                        </div>
+                        <p>The setup helper will automatically configure Claude Desktop for you.</p>
+                    </div>
+
+                    <div class="install-card">
+                        <h3>Manual Installation</h3>
+                        <div class="code-block">
+                            <pre><code># Install pyapple-mcp
+pip install pyapple-mcp</code></pre>
+                        </div>
+                        <p>Then configure Claude Desktop by editing <code>~/Library/Application Support/Claude Desktop/claude_desktop_config.json</code>:</p>
+                        <div class="code-block">
+                            <pre><code>{
+  "mcpServers": {
+    "pyapple": {
+      "command": "pyapple-mcp"
+    }
+  }
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="requirements">
+                    <h3>Requirements</h3>
+                    <ul>
+                        <li><strong>macOS 10.14+</strong> (Mojave or later)</li>
+                        <li><strong>Python 3.9+</strong></li>
+                        <li><strong>Appropriate permissions</strong> for accessing Contacts, Calendar, Messages, Mail, Notes, Reminders, and Automation</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="usage" class="section">
+            <div class="container">
+                <h2>Usage Examples</h2>
+                
+                <div class="usage-examples">
+                    <div class="example">
+                        <h3>Basic Commands</h3>
+                        <div class="example-item">
+                            <div class="code-block">
+                                <pre><code>Can you send a message to John Doe saying "Hello from Claude!"?</code></pre>
+                            </div>
+                        </div>
+                        <div class="example-item">
+                            <div class="code-block">
+                                <pre><code>Find all notes about "AI research" and summarize them</code></pre>
+                            </div>
+                        </div>
+                        <div class="example-item">
+                            <div class="code-block">
+                                <pre><code>Create a reminder to "Buy groceries" for tomorrow at 5pm</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="example">
+                        <h3>Advanced Workflows</h3>
+                        <div class="example-item">
+                            <div class="code-block">
+                                <pre><code>Read my note about the conference attendees, find their contact information, and send them a thank you email</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="api" class="section bg-light">
+            <div class="container">
+                <h2>API Reference</h2>
+                
+                <div class="api-sections">
+                    <div class="api-section">
+                        <h3>Development</h3>
+                        <div class="code-block">
+                            <pre><code># Clone the repository
+git clone https://github.com/54yyyu/pyapple-mcp.git
+cd pyapple-mcp
+
+# Install dependencies
+pip install -e ".[dev]"
+
+# Run the development server
+python -m pyapple_mcp.server</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="api-section">
+                        <h3>Testing</h3>
+                        <div class="code-block">
+                            <pre><code># Test the server
+mcp dev pyapple_mcp/server.py
+
+# Test with dependencies
+mcp dev pyapple_mcp/server.py --with httpx --with beautifulsoup4</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="api-section">
+                        <h3>Code Quality</h3>
+                        <div class="code-block">
+                            <pre><code>black .        # Format code
+isort .        # Sort imports  
+mypy .         # Type checking
+pytest         # Run tests</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 PyApple MCP Tools. Licensed under the MIT License.</p>
+            <p>Built with ❤️ for the Model Context Protocol ecosystem.</p>
+        </div>
+    </footer>
+</body>
+</html>
