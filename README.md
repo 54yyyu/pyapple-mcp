@@ -1,12 +1,10 @@
 # PyApple MCP Tools
 
-[![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![MCP](https://img.shields.io/badge/MCP-compatible-purple.svg)](https://modelcontextprotocol.io)
 
 A Python implementation of Apple-native tools for the [Model Context Protocol (MCP)](https://modelcontextprotocol.com/docs/mcp-protocol), providing seamless integration with macOS applications.
-
-![PyApple MCP Demo](https://via.placeholder.com/600x300?text=PyApple+MCP+Demo)
 
 ## Features
 
