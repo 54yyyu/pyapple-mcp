@@ -6,7 +6,7 @@ Provides functionality to search the web using DuckDuckGo and retrieve content f
 
 import logging
 import httpx
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 from bs4 import BeautifulSoup
 import re
 from urllib.parse import urljoin, urlparse
@@ -27,7 +27,7 @@ class WebSearchHandler:
                 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
                 "AppleWebKit/537.36 (KHTML, like Gecko) "
                 "Chrome/91.0.4472.124 Safari/537.36"
-            )
+            ),
         }
     
     async def _get_vqd(self, client: httpx.AsyncClient, query: str) -> str:
@@ -49,7 +49,9 @@ class WebSearchHandler:
             raise RuntimeError("Could not find vqd token")
         return m.group(1)
     
-    async def search_web(self, query: str, max_results: int = 5) -> Dict[str, Any]:
+    async def search_web(
+        self, query: str, max_results: int = 5
+    ) -> Dict[str, Any]:
         """
         Search the web using DuckDuckGo and retrieve content from results.
         
@@ -128,7 +130,9 @@ class WebSearchHandler:
             logger.error(f"Web search failed: {e}")
             return {"success": False, "results": [], "error": str(e)}
     
-    def search_web_sync(self, query: str, max_results: int = 5) -> Dict[str, Any]:
+    def search_web_sync(
+        self, query: str, max_results: int = 5
+    ) -> Dict[str, Any]:
         """
         Synchronous version of web search for compatibility.
         
@@ -154,15 +158,21 @@ class WebSearchHandler:
                             # We're in an async context, create a new thread
                             import concurrent.futures
                             with concurrent.futures.ThreadPoolExecutor() as executor:
-                                future = executor.submit(asyncio.run, self.search_web(query, max_results))
+                                future = executor.submit(
+                                    asyncio.run, self.search_web(query, max_results)
+                                )
                                 return future.result()
                         else:
-                            return loop.run_until_complete(self.search_web(query, max_results))
+                            return loop.run_until_complete(
+                                self.search_web(query, max_results)
+                            )
                     except RuntimeError:
                         loop = asyncio.new_event_loop()
                         asyncio.set_event_loop(loop)
                         try:
-                            return loop.run_until_complete(self.search_web(query, max_results))
+                            return loop.run_until_complete(
+                                self.search_web(query, max_results)
+                            )
                         finally:
                             loop.close()
                 else:

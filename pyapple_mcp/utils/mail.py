@@ -13,7 +13,7 @@ import email.policy
 from email.header import decode_header
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
 from .applescript import applescript
 
 logger = logging.getLogger(__name__)
@@ -354,9 +354,15 @@ class MailHandler:
         else:
             return {"success": False, "message": f"Failed to mark emails as read: {result.get('error')}"}
     
-    def get_unread_emails(self, account: Optional[str] = None, mailbox: Optional[str] = None, 
-                         limit: int = 10, full_content: bool = False, search_range: Optional[int] = None,
-                         mark_read: bool = False) -> List[Dict[str, str]]:
+    def get_unread_emails(
+        self,
+        account: Optional[str] = None,
+        mailbox: Optional[str] = None,
+        limit: int = 10,
+        full_content: bool = False,
+        search_range: Optional[int] = None,
+        mark_read: bool = False,
+    ) -> List[Dict[str, str]]:
         """
         Get unread emails from the local Mail database.
         
@@ -414,8 +420,15 @@ class MailHandler:
         
         return emails
     
-    def search_emails(self, search_term: str, account: Optional[str] = None, mailbox: Optional[str] = None, 
-                     limit: int = 10, full_content: bool = False, search_range: Optional[int] = None) -> List[Dict[str, str]]:
+    def search_emails(
+        self,
+        search_term: str,
+        account: Optional[str] = None,
+        mailbox: Optional[str] = None,
+        limit: int = 10,
+        full_content: bool = False,
+        search_range: Optional[int] = None,
+    ) -> List[Dict[str, str]]:
         """
         Search for emails containing the specified term using the local Mail database.
         
@@ -476,7 +489,14 @@ class MailHandler:
         # Limit results
         return emails[:actual_limit] if actual_limit != 999999 else emails
     
-    def send_email(self, to: str, subject: str, body: str, cc: Optional[str] = None, bcc: Optional[str] = None) -> Dict[str, Any]:
+    def send_email(
+        self,
+        to: str,
+        subject: str,
+        body: str,
+        cc: Optional[str] = None,
+        bcc: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """
         Send an email to the specified recipient(s).
         

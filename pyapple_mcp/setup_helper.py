@@ -117,7 +117,7 @@ def find_executable():
             text=True,
             timeout=15,
         )
-        paths = result.stdout.strip().split('\n')
+        paths = result.stdout.strip().split("\n")
         if paths and paths[0]:
             print(f"Found pyapple-mcp at {paths[0]}")
             return paths[0]
@@ -133,8 +133,20 @@ def find_claude_config():
     """Find Claude Desktop config file path on macOS."""
     config_paths = [
         # Try both old and new paths
-        Path.home() / "Library" / "Application Support" / "Claude Desktop" / "claude_desktop_config.json",
-        Path.home() / "Library" / "Application Support" / "Claude" / "claude_desktop_config.json"
+        (
+            Path.home()
+            / "Library"
+            / "Application Support"
+            / "Claude Desktop"
+            / "claude_desktop_config.json"
+        ),
+        (
+            Path.home()
+            / "Library"
+            / "Application Support"
+            / "Claude"
+            / "claude_desktop_config.json"
+        ),
     ]
     
     # Check all possible locations
@@ -144,7 +156,13 @@ def find_claude_config():
             return path
     
     # Return the default path (newer "Claude Desktop" path)
-    default_path = Path.home() / "Library" / "Application Support" / "Claude Desktop" / "claude_desktop_config.json"
+    default_path = (
+        Path.home()
+        / "Library"
+        / "Application Support"
+        / "Claude Desktop"
+        / "claude_desktop_config.json"
+    )
     print(f"Claude Desktop config not found. Using default path: {default_path}")
     return default_path
 
@@ -162,7 +180,10 @@ def update_claude_config(config_path, pyapple_mcp_path):
                 config = json.load(f)
             print(f"Loaded existing config from: {config_path}")
         except json.JSONDecodeError:
-            print(f"Error: Config file at {config_path} is not valid JSON. Creating new config.")
+            print(
+                f"Error: Config file at {config_path} is not valid JSON. "
+                "Creating new config."
+            )
             config = {}
     else:
         print(f"Creating new config file at: {config_path}")
@@ -174,9 +195,7 @@ def update_claude_config(config_path, pyapple_mcp_path):
     
     # Add or update pyapple config
     # Always use the full path to ensure it works regardless of PATH
-    config["mcpServers"]["pyapple"] = {
-        "command": pyapple_mcp_path
-    }
+    config["mcpServers"]["pyapple"] = {"command": pyapple_mcp_path}
     
     # Write updated config
     try:
@@ -261,7 +280,9 @@ def print_path_instructions(exe_path):
 
 def main(cli_args=None):
     """Main function to run the setup helper."""
-    parser = argparse.ArgumentParser(description="Configure pyapple-mcp for Claude Desktop on macOS")
+    parser = argparse.ArgumentParser(
+        description="Configure pyapple-mcp for Claude Desktop on macOS"
+    )
     parser.add_argument("--config-path", help="Path to Claude Desktop config file")
     parser.add_argument("--skip-checks", action="store_true", help="Skip macOS compatibility checks")
     

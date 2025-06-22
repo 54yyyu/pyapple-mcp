@@ -5,7 +5,7 @@ Provides functionality to search, create, and manage reminders using the macOS R
 """
 
 import logging
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
 from .applescript import applescript
 
 logger = logging.getLogger(__name__)

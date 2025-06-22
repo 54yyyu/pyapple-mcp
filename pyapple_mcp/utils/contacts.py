@@ -5,7 +5,7 @@ Provides functionality to search and retrieve contacts from the macOS Contacts a
 """
 
 import logging
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 from .applescript import applescript
 
 logger = logging.getLogger(__name__)
@@ -151,7 +151,13 @@ class ContactsHandler:
             logger.error(f"Failed to get all contacts: {result.get('error')}")
             return {}
     
-    def add_contact(self, first_name: str, last_name: str = "", phone: str = "", email: str = "") -> Dict[str, Any]:
+    def add_contact(
+        self,
+        first_name: str,
+        last_name: str = "",
+        phone: str = "",
+        email: str = "",
+    ) -> Dict[str, Any]:
         """
         Add a new contact to the Contacts app.
         
@@ -186,18 +192,21 @@ class ContactsHandler:
         # Add phone number if provided
         if phone.strip():
             script_parts.extend([
-                f'        make new phone at end of phones of newPerson with properties {{label:"mobile", value:"{phone.strip()}"}}'
+                f'        make new phone at end of phones of newPerson with properties '
+                f'{{label:"mobile", value:"{phone.strip()}"}}'
             ])
         
         # Add email if provided
         if email.strip():
             script_parts.extend([
-                f'        make new email at end of emails of newPerson with properties {{label:"home", value:"{email.strip()}"}}'
+                f'        make new email at end of emails of newPerson with properties '
+                f'{{label:"home", value:"{email.strip()}"}}'
             ])
         
         script_parts.extend([
             '        save',
-            f'        return "Success: Added contact " & first name of newPerson & " " & last name of newPerson',
+            f'        return "Success: Added contact " & first name of newPerson '
+            f'& " " & last name of newPerson',
             '    on error errMsg',
             '        return "Error: " & errMsg',
             '    end try',

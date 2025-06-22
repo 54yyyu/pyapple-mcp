@@ -5,7 +5,7 @@ Provides functionality to search, list, and create notes in the macOS Notes app.
 """
 
 import logging
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 from .applescript import applescript
 
 logger = logging.getLogger(__name__)
@@ -154,7 +154,9 @@ class NotesHandler:
             logger.error(f"Failed to list notes: {result.get('error')}")
             return []
     
-    def create_note(self, title: str, body: str, folder_name: str = "Claude") -> Dict[str, Any]:
+    def create_note(
+        self, title: str, body: str, folder_name: str = "Claude"
+    ) -> Dict[str, Any]:
         """
         Create a new note in the specified folder.
         
@@ -186,7 +188,8 @@ class NotesHandler:
                     set targetFolder to folder "{safe_folder}" of targetAccount
                 on error
                     -- Folder doesn't exist, create it
-                    set targetFolder to make new folder with properties {{name:"{safe_folder}"}} at targetAccount
+                    set targetFolder to make new folder with properties \
+                        {{name:"{safe_folder}"}} at targetAccount
                 end try
                 
                 -- Create the note first, then set properties
@@ -194,7 +197,10 @@ class NotesHandler:
                 set body of newNote to "{safe_body}"
                 set name of newNote to "{safe_title}"
                 
-                return "Success: Note '" & "{safe_title}" & "' created in folder '" & "{safe_folder}" & "'"
+                return (
+                    "Success: Note '" & "{safe_title}" & "' created in folder '" 
+                    & "{safe_folder}" & "'"
+                )
                 
             on error errMsg
                 return "Error: " & errMsg

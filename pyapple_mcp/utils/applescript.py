@@ -7,7 +7,7 @@ with proper error handling and timeout management.
 
 import subprocess
 import logging
-from typing import Optional, Dict, Any, Union
+from typing import Any, Dict, Optional, Union
 import json
 import os
 
@@ -62,7 +62,9 @@ class AppleScriptRunner:
                 return {"success": False, "result": None, "error": error_msg}
                 
         except subprocess.TimeoutExpired:
-            error_msg = f"AppleScript execution timed out after {execution_timeout} seconds"
+            error_msg = (
+                f"AppleScript execution timed out after {execution_timeout} seconds"
+            )
             logger.error(error_msg)
             return {"success": False, "result": None, "error": error_msg}
         except Exception as e:

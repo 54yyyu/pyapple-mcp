@@ -10,7 +10,7 @@ import logging
 import sqlite3
 import os
 import re
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 from datetime import datetime
 from .applescript import applescript
 
@@ -564,7 +564,9 @@ Error details: {e}
             logger.error(f"Failed to read messages: {result.get('error')}")
             return []
     
-    def schedule_message(self, phone_number: str, message: str, scheduled_time: str) -> Dict[str, Any]:
+    def schedule_message(
+        self, phone_number: str, message: str, scheduled_time: str
+    ) -> Dict[str, Any]:
         """
         Schedule a message to be sent at a specific time.
         Note: This is a placeholder implementation as Messages doesn't natively support scheduling.
@@ -579,8 +581,11 @@ Error details: {e}
         """
         # For now, we'll just indicate that scheduling isn't supported natively
         return {
-            "success": False, 
-            "message": "Message scheduling is not natively supported by Apple Messages. Consider using a third-party automation tool."
+            "success": False,
+            "message": (
+                "Message scheduling is not natively supported by Apple Messages. "
+                "Consider using a third-party automation tool."
+            ),
         }
     
     def get_unread_count(self) -> int:

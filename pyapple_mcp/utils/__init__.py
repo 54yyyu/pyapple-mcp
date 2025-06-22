@@ -7,4 +7,4 @@ through AppleScript and PyObjC frameworks.
 
 from .applescript import AppleScriptRunner
 
-__all__ = ["AppleScriptRunner"] 
+__all__ = ["AppleScriptRunner"]

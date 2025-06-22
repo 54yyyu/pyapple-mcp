@@ -12,4 +12,4 @@ __description__ = "Python implementation of Apple MCP tools for macOS"
 
 from .server import app
 
-__all__ = ["app", "__version__"] 
+__all__ = ["app", "__version__"]

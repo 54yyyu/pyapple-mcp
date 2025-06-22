@@ -3,24 +3,25 @@
 PyApple MCP Server
 
 Main server implementation providing Apple-native tools for the Model Context Protocol.
-Supports integration with Messages, Notes, Contacts, Mail, Calendar, Reminders, Maps, and Web Search.
+Supports integration with Messages, Notes, Contacts, Mail, Calendar, Reminders,
+Maps, and Web Search.
 """
 
+import asyncio
 import logging
 import sys
-from typing import Dict, Any, List
-import asyncio
+from typing import Any, Dict, List
 
 from mcp.server.fastmcp import FastMCP
 
 # Import all tool implementations
-from .utils.contacts import ContactsHandler
-from .utils.notes import NotesHandler
-from .utils.messages import MessagesHandler
-from .utils.mail import MailHandler
-from .utils.reminders import RemindersHandler
 from .utils.calendar import CalendarHandler
+from .utils.contacts import ContactsHandler
+from .utils.mail import MailHandler
 from .utils.maps import MapsHandler
+from .utils.messages import MessagesHandler
+from .utils.notes import NotesHandler
+from .utils.reminders import RemindersHandler
 from .utils.websearch import WebSearchHandler
 
 # Configure logging
@@ -70,7 +71,8 @@ def contacts(
     Search, add, and manage contacts in Apple Contacts app.
 
     Args:
-        operation: Operation to perform: 'search', 'add', or 'delete' (default: 'search')
+        operation: Operation to perform: 'search', 'add', or 'delete' 
+            (default: 'search')
         name: Name to search for (optional - if not provided, returns all contacts)
         first_name: First name for new contact (required for add operation)
         last_name: Last name for new contact (optional for add operation)
@@ -84,8 +86,10 @@ def contacts(
         if operation == "add":
             if not first_name:
                 return "First name is required for add operation"
-            
-            result = contacts_handler.add_contact(first_name, last_name or "", phone or "", email or "")
+
+            result = contacts_handler.add_contact(
+                first_name, last_name or "", phone or "", email or ""
+            )
             if result["success"]:
                 contact_info = f"Added contact: {first_name}"
                 if last_name:
@@ -101,7 +105,7 @@ def contacts(
         elif operation == "delete":
             if not name:
                 return "Contact name is required for delete operation"
-            
+
             result = contacts_handler.delete_contact(name)
             if result["success"]:
                 return f"Successfully deleted contact: {result['message']}"
@@ -114,18 +118,27 @@ def contacts(
                 if numbers:
                     return f"{name}: {', '.join(numbers)}"
                 else:
-                    return f'No contact found for "{name}". Try a different name or use no name parameter to list all contacts.'
+                    return (
+                        f'No contact found for "{name}". Try a different name or '
+                        "use no name parameter to list all contacts."
+                    )
             else:
                 all_numbers = contacts_handler.get_all_numbers()
                 contact_count = len(all_numbers)
                 
                 if contact_count == 0:
-                    return "No contacts found in the address book. Please make sure you have granted access to Contacts."
+                    return (
+                        "No contacts found in the address book. Please make sure you "
+                        "have granted access to Contacts."
+                    )
                 
-                # Format contacts for display (limit to first 50 to avoid overwhelming output)
+                # Format contacts for display (limit to first 50 to avoid 
+                # overwhelming output)
                 contacts_list = []
                 for contact_name, phone_numbers in list(all_numbers.items())[:50]:
-                    contacts_list.append(f"{contact_name}: {', '.join(phone_numbers)}")
+                    contacts_list.append(
+                        f"{contact_name}: {', '.join(phone_numbers)}"
+                    )
                 
                 result = f"Found {contact_count} contacts"
                 if contact_count > 50:
@@ -172,7 +185,10 @@ def notes(
                     formatted_results.append(
                         f"Title: {note['title']}\nContent: {note['content'][:200]}..."
                     )
-                return f"Found {len(results)} notes matching '{search_text}':\n\n" + "\n\n".join(formatted_results)
+                return (
+                    f"Found {len(results)} notes matching '{search_text}':\n\n"
+                    + "\n\n".join(formatted_results)
+                )
             else:
                 return f"No notes found matching '{search_text}'"
                 
@@ -183,13 +199,26 @@ def notes(
             results = notes_handler.search_notes(search_text)
             if results:
                 # Find exact title match or closest match
-                exact_match = next((note for note in results if note['title'].lower() == search_text.lower()), None)
+                exact_match = next(
+                    (
+                        note
+                        for note in results
+                        if note["title"].lower() == search_text.lower()
+                    ),
+                    None,
+                )
                 if exact_match:
-                    return f"Title: {exact_match['title']}\n\nFull Content:\n{exact_match['content']}"
+                    return (
+                        f"Title: {exact_match['title']}\n\n"
+                        f"Full Content:\n{exact_match['content']}"
+                    )
                 else:
                     # Show first match with full content
                     first_match = results[0]
-                    return f"Title: {first_match['title']}\n\nFull Content:\n{first_match['content']}"
+                    return (
+                        f"Title: {first_match['title']}\n\n"
+                        f"Full Content:\n{first_match['content']}"
+                    )
             else:
                 return f"No notes found matching '{search_text}'"
                 
@@ -198,8 +227,12 @@ def notes(
             if results:
                 formatted_results = []
                 for note in results:
-                    formatted_results.append(f"Title: {note['title']}\nContent: {note['content'][:100]}...")
-                return f"Found {len(results)} notes:\n\n" + "\n\n".join(formatted_results)
+                    formatted_results.append(
+                        f"Title: {note['title']}\nContent: {note['content'][:100]}..."
+                    )
+                return (
+                    f"Found {len(results)} notes:\n\n" + "\n\n".join(formatted_results)
+                )
             else:
                 return "No notes found"
                 
@@ -223,7 +256,10 @@ def notes(
             else:
                 return f"Failed to delete note: {result['message']}"
         else:
-            return f"Unknown operation: {operation}. Valid operations are: search, list, view, create, delete"
+            return (
+                f"Unknown operation: {operation}. Valid operations are: "
+                "search, list, view, create, delete"
+            )
             
     except Exception as e:
         logger.error(f"Error in notes tool: {e}")
@@ -275,7 +311,10 @@ def messages(
                     content = msg.get('content', '')
                     time = msg.get('time', msg.get('date', ''))
                     formatted_messages.append(f"[{time}] {sender}: {content}")
-                return f"Last {len(messages_list)} messages with {phone_number}:\n\n" + "\n".join(formatted_messages)
+                return (
+                    f"Last {len(messages_list)} messages with {phone_number}:\n\n"
+                    + "\n".join(formatted_messages)
+                )
             else:
                 return f"No messages found with {phone_number}"
                 
@@ -283,9 +322,14 @@ def messages(
             if not phone_number or not message or not scheduled_time:
                 return "Phone number, message, and scheduled_time are required for schedule operation"
             
-            result = messages_handler.schedule_message(phone_number, message, scheduled_time)
+            result = messages_handler.schedule_message(
+                phone_number, message, scheduled_time
+            )
             if result["success"]:
-                return f"Message scheduled successfully to {phone_number} at {scheduled_time}: {message}"
+                return (
+                    f"Message scheduled successfully to {phone_number} at "
+                    f"{scheduled_time}: {message}"
+                )
             else:
                 return f"Failed to schedule message: {result['message']}"
                 
@@ -295,12 +339,20 @@ def messages(
             if unread_messages:
                 formatted_messages = []
                 for msg in unread_messages:
-                    formatted_messages.append(f"[{msg['date']}] {msg['sender']}: {msg['content']}")
-                return f"Found {len(unread_messages)} unread messages:\n\n" + "\n".join(formatted_messages)
+                    formatted_messages.append(
+                    f"[{msg['date']}] {msg['sender']}: {msg['content']}"
+                )
+                return (
+                    f"Found {len(unread_messages)} unread messages:\n\n"
+                    + "\n".join(formatted_messages)
+                )
             else:
                 return "No unread messages found"
         else:
-            return f"Unknown operation: {operation}. Valid operations are: send, read, schedule, unread"
+            return (
+                f"Unknown operation: {operation}. Valid operations are: "
+                "send, read, schedule, unread"
+            )
             
     except Exception as e:
         logger.error(f"Error in messages tool: {e}")
@@ -349,7 +401,9 @@ def mail(
     try:
         if operation == "unread":
             # Use optimized database approach for unread emails
-            emails = mail_handler.get_unread_emails(account, mailbox, limit, full_content, search_range, mark_read)
+            emails = mail_handler.get_unread_emails(
+                account, mailbox, limit, full_content, search_range, mark_read
+            )
             if emails:
                 formatted_emails = []
                 for email in emails:

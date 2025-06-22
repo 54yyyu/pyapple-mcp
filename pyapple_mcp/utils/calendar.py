@@ -7,7 +7,7 @@ Provides functionality to search, create, and manage calendar events using the m
 import logging
 import sqlite3
 import os
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
 from datetime import datetime, timedelta
 from .applescript import applescript
 
@@ -88,7 +88,14 @@ class CalendarHandler:
         actual_date = reference_date + timedelta(seconds=core_data_timestamp)
         return actual_date.strftime("%Y-%m-%d %H:%M:%S")
     
-    def search_events_db(self, search_text: str, limit: int = 10, from_date: Optional[str] = None, to_date: Optional[str] = None, calendar_filter: Optional[str] = None) -> List[Dict[str, Any]]:
+    def search_events_db(
+        self,
+        search_text: str,
+        limit: int = 10,
+        from_date: Optional[str] = None,
+        to_date: Optional[str] = None,
+        calendar_filter: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
         """
         Search for calendar events using direct database access.
         
@@ -176,7 +183,13 @@ class CalendarHandler:
         finally:
             conn.close()
     
-    def get_events_db(self, limit: int = 10, from_date: Optional[str] = None, to_date: Optional[str] = None, calendar_filter: Optional[str] = None) -> List[Dict[str, Any]]:
+    def get_events_db(
+        self,
+        limit: int = 10,
+        from_date: Optional[str] = None,
+        to_date: Optional[str] = None,
+        calendar_filter: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
         """
         Get calendar events using direct database access.
         
@@ -259,7 +272,13 @@ class CalendarHandler:
         finally:
             conn.close()
     
-    def search_events(self, search_text: str, limit: int = 10, from_date: Optional[str] = None, to_date: Optional[str] = None) -> List[Dict[str, Any]]:
+    def search_events(
+        self,
+        search_text: str,
+        limit: int = 10,
+        from_date: Optional[str] = None,
+        to_date: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
         """
         Search for calendar events containing the specified text.
         
@@ -387,7 +406,12 @@ class CalendarHandler:
             logger.error(f"Failed to search events: {result.get('error')}")
             return []
     
-    def get_events(self, limit: int = 10, from_date: Optional[str] = None, to_date: Optional[str] = None) -> List[Dict[str, Any]]:
+    def get_events(
+        self,
+        limit: int = 10,
+        from_date: Optional[str] = None,
+        to_date: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
         """
         Get calendar events in a specified date range.
         
@@ -508,7 +532,17 @@ class CalendarHandler:
             logger.error(f"Failed to get events: {result.get('error')}")
             return []
     
-    def create_event(self, title: str, start_date: str, end_date: str, location: Optional[str] = None, notes: Optional[str] = None, is_all_day: bool = False, calendar_name: Optional[str] = None, invitees: Optional[List[str]] = None) -> Dict[str, Any]:
+    def create_event(
+        self,
+        title: str,
+        start_date: str,
+        end_date: str,
+        location: Optional[str] = None,
+        notes: Optional[str] = None,
+        is_all_day: bool = False,
+        calendar_name: Optional[str] = None,
+        invitees: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
         """
         Create a new calendar event.
         

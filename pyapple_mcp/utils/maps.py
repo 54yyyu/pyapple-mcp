@@ -5,7 +5,7 @@ Provides functionality to search locations, manage guides, save favorites, and g
 """
 
 import logging
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
 from .applescript import applescript
 
 logger = logging.getLogger(__name__)
@@ -120,7 +120,10 @@ class MapsHandler:
                 
                 -- Try to add to favorites (this requires manual interaction in most cases)
                 -- Apple Maps doesn't provide full AppleScript automation for favorites
-                return "Success: Location '{safe_name}' searched in Maps. To save as favorite, please manually click the 'Add to Favorites' option in the Maps app."
+                return (
+                    "Success: Location '{safe_name}' searched in Maps. To save as favorite, "
+                    "please manually click the 'Add to Favorites' option in the Maps app."
+                )
                 
             on error errMsg
                 return "Error: " & errMsg
@@ -173,7 +176,10 @@ class MapsHandler:
                 -- Wait for search to complete and pin to appear
                 delay 3
                 
-                return "Success: Pin location searched for '{safe_name}' at '{safe_address}'. Pin should be visible in Maps app."
+                return (
+                    "Success: Pin location searched for '{safe_name}' at '{safe_address}'. "
+                    "Pin should be visible in Maps app."
+                )
                 
             on error errMsg
                 return "Error: " & errMsg
@@ -193,7 +199,12 @@ class MapsHandler:
             logger.error(f"Failed to drop pin: {result.get('error')}")
             return {"success": False, "message": f"Failed to drop pin: {result.get('error')}"}
     
-    def get_directions(self, from_address: str, to_address: str, transport_type: str = "driving") -> Dict[str, Any]:
+    def get_directions(
+        self,
+        from_address: str,
+        to_address: str,
+        transport_type: str = "driving",
+    ) -> Dict[str, Any]:
         """
         Get directions between two locations in Apple Maps.
         
@@ -235,8 +246,12 @@ class MapsHandler:
             result_msg = result['result']
             if result_msg.startswith("Success:"):
                 return {
-                    "success": True, 
-                    "message": f"Maps opened for directions from '{from_address}' to '{to_address}'. Due to Apple Maps' limited AppleScript support, please manually search for directions in the Maps app. Suggested search: '{from_address} to {to_address}'"
+                    "success": True,
+                    "message": (
+                        f"Maps opened for directions from '{from_address}' to '{to_address}'. "
+                        "Due to Apple Maps' limited AppleScript support, please manually search "
+                        f"for directions in the Maps app. Suggested search: '{from_address} to {to_address}'"
+                    ),
                 }
             else:
                 logger.error(f"Maps directions error: {result_msg}")
