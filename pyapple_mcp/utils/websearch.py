@@ -122,11 +122,11 @@ class WebSearchHandler:
                         logger.warning(f"Error processing search result: {e}")
                         continue
                 
-                return {\"success\": True, \"results\": results, \"error\": None}
+                return {"success": True, "results": results, "error": None}
                 
         except Exception as e:
             logger.error(f"Web search failed: {e}")
-            return {\"success\": False, \"results\": [], \"error\": str(e)}
+            return {"success": False, "results": [], "error": str(e)}
     
     def search_web_sync(self, query: str, max_results: int = 5) -> Dict[str, Any]:
         """
@@ -169,7 +169,7 @@ class WebSearchHandler:
                     raise
         except Exception as e:
             logger.error(f"Sync web search failed: {e}")
-            return {\"success\": False, \"results\": [], \"error\": str(e)}
+            return {"success": False, "results": [], "error": str(e)}
     
     async def _extract_page_content(self, client: httpx.AsyncClient, url: str) -> str:
         """

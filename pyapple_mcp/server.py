@@ -172,10 +172,7 @@ def notes(
                     formatted_results.append(
                         f"Title: {note['title']}\nContent: {note['content'][:200]}..."
                     )
-                return (
-                    f"Found {len(results)} notes matching '{search_text}':\n\n"
-                    + "\n\n".join(formatted_results)
-                )"
+                return f"Found {len(results)} notes matching '{search_text}':\n\n" + "\n\n".join(formatted_results)
             else:
                 return f"No notes found matching '{search_text}'"
                 
