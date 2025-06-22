@@ -444,7 +444,7 @@ def reminders(
     props: List[str] = None,
     notes: str = None,
     due_date: str = None,
-    show_completed: bool = False
+    show_completed: bool = False,
 ) -> str:
     """
     Search, create, and open reminders in Apple Reminders app.
@@ -500,26 +500,6 @@ def reminders(
             else:
                 return f"Failed to create reminder: {result['message']}"
                 
-        elif operation == "move":
-            if not event_id or not target_calendar_name:
-                return "Event ID and target calendar name are required for move operation"
-            
-            result = calendar_handler.move_event(event_id, target_calendar_name)
-            if result["success"]:
-                return f"Successfully moved event: {result['message']}"
-            else:
-                return f"Failed to move event: {result['message']}"
-                
-        elif operation == "delete":
-            if not event_id:
-                return "Event ID is required for delete operation"
-            
-            result = calendar_handler.delete_event(event_id)
-            if result["success"]:
-                return f"Successfully deleted event: {result['message']}"
-            else:
-                return f"Failed to delete event: {result['message']}"
-                
         elif operation == "open":
             if not search_text:
                 return "Search text is required for open operation"
@@ -553,7 +533,7 @@ def calendar(
     is_all_day: bool = False,
     calendar_name: str = None,
     target_calendar_name: str = None,
-    invitees: List[str] = None
+    invitees: List[str] = None,
 ) -> str:
     """
     Search, create, delete, move, and open calendar events in Apple Calendar app.
@@ -676,7 +656,7 @@ def maps(
     from_address: str = None,
     to_address: str = None,
     transport_type: str = "driving",
-    guide_name: str = None
+    guide_name: str = None,
 ) -> str:
     """
     Search locations, manage guides, save favorites, and get directions using Apple Maps.
