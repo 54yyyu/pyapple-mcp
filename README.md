@@ -122,7 +122,7 @@ mcp dev pyapple_mcp/server.py --with httpx --with beautifulsoup4
 ## Requirements
 
 - **macOS 10.15+** (Catalina or later)
-- **Python 3.9+**
+- **Python 3.10+**
 - **Appropriate permissions** for accessing:
   - Contacts
   - Calendar
