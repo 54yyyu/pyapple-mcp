@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Reference - PyApple MCP Tools</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="api-styles.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="nav-container">
+                <div class="logo">
+                    <h1><a href="index.html">PyApple MCP</a></h1>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="index.html#home">Home</a></li>
+                    <li><a href="index.html#features">Features</a></li>
+                    <li><a href="index.html#installation">Installation</a></li>
+                    <li><a href="index.html#usage">Usage</a></li>
+                    <li><a href="api.html" class="active">API Reference</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="api-hero">
+            <div class="container">
+                <h1>API Reference</h1>
+                <p>Complete documentation for all PyApple MCP tool functions</p>
+            </div>
+        </section>
+
+        <div class="container">
+            <aside class="api-sidebar">
+                <h3>Tools</h3>
+                <ul class="api-nav">
+                    <li><a href="#contacts">contacts</a></li>
+                    <li><a href="#notes">notes</a></li>
+                    <li><a href="#messages">messages</a></li>
+                    <li><a href="#mail">mail</a></li>
+                    <li><a href="#reminders">reminders</a></li>
+                    <li><a href="#calendar">calendar</a></li>
+                    <li><a href="#maps">maps</a></li>
+                    <li><a href="#web_search">web_search</a></li>
+                </ul>
+            </aside>
+
+            <div class="api-content">
+                <div class="api-function" id="contacts">
+                    <h2>contacts</h2>
+                    <p class="api-description">Search, add, and manage contacts in Apple Contacts app.</p>
+                    
+                    <div class="api-signature">
+                        <h3>Signature</h3>
+                        <code>contacts(operation: str = "search", name: str = None, first_name: str = None, last_name: str = None, phone: str = None, email: str = None) → str</code>
+                    </div>
+
+                    <div class="api-parameters">
+                        <h3>Parameters</h3>
+                        <table>
+                            <tr>
+                                <td><code>operation</code></td>
+                                <td>str</td>
+                                <td>"search"</td>
+                                <td>Operation to perform: 'search', 'add', or 'delete'</td>
+                            </tr>
+                            <tr>
+                                <td><code>name</code></td>
+                                <td>str</td>
+                                <td>None</td>
+                                <td>Name to search for (if not provided, returns all contacts)</td>
+                            </tr>
+                            <tr>
+                                <td><code>first_name</code></td>
+                                <td>str</td>
+                                <td>None</td>
+                                <td>First name for new contact (required for add operation)</td>
+                            </tr>
+                            <tr>
+                                <td><code>last_name</code></td>
+                                <td>str</td>
+                                <td>None</td>
+                                <td>Last name for new contact (optional for add operation)</td>
+                            </tr>
+                            <tr>
+                                <td><code>phone</code></td>
+                                <td>str</td>
+                                <td>None</td>
+                                <td>Phone number for new contact (optional for add operation)</td>
+                            </tr>
+                            <tr>
+                                <td><code>email</code></td>
+                                <td>str</td>
+                                <td>None</td>
+                                <td>Email address for new contact (optional for add operation)</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="api-examples">
+                        <h3>Examples</h3>
+                        <div class="code-block">
+                            <pre><code>Search for a contact:
+"Search for John Doe in my contacts"
+
+Add a new contact:
+"Add a new contact named Alice Smith with email alice@example.com and phone 555-0123"</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="api-function" id="notes">
+                    <h2>notes</h2>
+                    <p class="api-description">Search, retrieve, create, and delete notes in Apple Notes app.</p>
+                    
+                    <div class="api-signature">
+                        <h3>Signature</h3>
+                        <code>notes(operation: str, search_text: str = None, title: str = None, body: str = None, folder_name: str = "Claude") → str</code>
+                    </div>
+
+                    <div class="api-parameters">
+                        <h3>Parameters</h3>
+                        <table>
+                            <tr>
+                                <td><code>operation</code></td>
+                                <td>str</td>
+                                <td>Required</td>
+                                <td>Operation to perform: 'search', 'list', 'view', 'create', or 'delete'</td>
+                            </tr>
+                            <tr>
+                                <td><code>search_text</code></td>
+                                <td>str</td>
+                                <td>None</td>
+                                <td>Text to search for in notes (required for search, view, and delete operations)</td>
+                            </tr>
+                            <tr>
+                                <td><code>title</code></td>
+                                <td>str</td>
+                                <td>None</td>
+                                <td>Title of the note to create (required for create operation)</td>
+                            </tr>
+                            <tr>
+                                <td><code>body</code></td>
+                                <td>str</td>
+                                <td>None</td>
+                                <td>Content of the note to create (required for create operation)</td>
+                            </tr>
+                            <tr>
+                                <td><code>folder_name</code></td>
+                                <td>str</td>
+                                <td>"Claude"</td>
+                                <td>Name of the folder to create the note in (optional for create)</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="api-examples">
+                        <h3>Examples</h3>
+                        <div class="code-block">
+                            <pre><code>Create a note:
+"Create a note titled 'Meeting Notes' with content 'Discussed project timeline'"
+
+Search notes:
+"Find all notes containing 'AI research'"</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="api-function" id="messages">
+                    <h2>messages</h2>
+                    <p class="api-description">Interact with Apple Messages app - send, read, schedule messages and check unread messages.</p>
+                    
+                    <div class="api-signature">
+                        <h3>Signature</h3>
+                        <code>messages(operation: str, phone_number: str = None, message: str = None, limit: int = 10, scheduled_time: str = None) → str</code>
+                    </div>
+
+                    <div class="api-parameters">
+                        <h3>Parameters</h3>
+                        <table>
+                            <tr>
+                                <td><code>operation</code></td>
+                                <td>str</td>
+                                <td>Required</td>
+                                <td>Operation to perform: 'send', 'read', 'schedule', or 'unread'</td>
+                            </tr>
+                            <tr>
+                                <td><code>phone_number</code></td>
+                                <td>str</td>
+                                <td>None</td>
+                                <td>Phone number for send, read, and schedule operations</td>
+                            </tr>
+                            <tr>
+                                <td><code>message</code></td>
+                                <td>str</td>
+                                <td>None</td>
+                                <td>Message to send (required for send and schedule operations)</td>
+                            </tr>
+                            <tr>
+                                <td><code>limit</code></td>
+                                <td>int</td>
+                                <td>10</td>
+                                <td>Number of messages to read (optional, for read and unread operations)</td>
+                            </tr>
+                            <tr>
+                                <td><code>scheduled_time</code></td>
+                                <td>str</td>
+                                <td>None</td>
+                                <td>ISO string of when to send message (required for schedule operation)</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="api-examples">
+                        <h3>Examples</h3>
+                        <div class="code-block">
+                            <pre><code>Send a message:
+"Send a message to +1234567890 saying 'Hello from Claude!'"
+
+Read recent messages:
+"Show me the last 5 messages from +1234567890"</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="api-function" id="mail">
+                    <h2>mail</h2>
+                    <p class="api-description">Interact with Apple Mail app - read unread emails, search emails, and send emails. Features optimized local database search for performance.</p>
+                    
+                    <div class="api-signature">
+                        <h3>Signature</h3>
+                        <code>mail(operation: str, account: str = None, mailbox: str = None, limit: int = 10, search_term: str = None, to: str = None, subject: str = None, body: str = None, cc: str = None, bcc: str = None, full_content: bool = False, search_range: int = None, mark_read: bool = False) → str</code>
+                    </div>
+
+                    <div class="api-parameters">
+                        <h3>Parameters</h3>
+                        <table>
+                            <tr>
+                                <td><code>operation</code></td>
+                                <td>str</td>
+                                <td>Required</td>
+                                <td>Operation to perform: 'unread', 'search', 'send', 'mailboxes', or 'accounts'</td>
+                            </tr>
+                            <tr>
+                                <td><code>account</code></td>
+                                <td>str</td>
+                                <td>None</td>
+                                <td>Email account to use (searches all accounts if not specified)</td>
+                            </tr>
+                            <tr>
+                                <td><code>search_term</code></td>
+                                <td>str</td>
+                                <td>None</td>
+                                <td>Text to search for in emails (required for search operation)</td>
+                            </tr>
+                            <tr>
+                                <td><code>to</code></td>
+                                <td>str</td>
+                                <td>None</td>
+                                <td>Recipient email address (required for send operation)</td>
+                            </tr>
+                            <tr>
+                                <td><code>subject</code></td>
+                                <td>str</td>
+                                <td>None</td>
+                                <td>Email subject (required for send operation)</td>
+                            </tr>
+                            <tr>
+                                <td><code>body</code></td>
+                                <td>str</td>
+                                <td>None</td>
+                                <td>Email body content (required for send operation)</td>
+                            </tr>
+                            <tr>
+                                <td><code>full_content</code></td>
+                                <td>bool</td>
+                                <td>False</td>
+                                <td>If True, return full email content without truncation</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="api-examples">
+                        <h3>Examples</h3>
+                        <div class="code-block">
+                            <pre><code>Search emails:
+"Search for emails containing 'project update' in the last 50 messages"
+
+Send an email:
+"Send an email to john@example.com with subject 'Meeting Follow-up' and body 'Thanks for the productive meeting'"</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="api-function" id="reminders">
+                    <h2>reminders</h2>
+                    <p class="api-description">Search, create, and open reminders in Apple Reminders app.</p>
+                    
+                    <div class="api-signature">
+                        <h3>Signature</h3>
+                        <code>reminders(operation: str, search_text: str = None, name: str = None, list_name: str = None, list_id: str = None, props: List[str] = None, notes: str = None, due_date: str = None, show_completed: bool = False) → str</code>
+                    </div>
+
+                    <div class="api-parameters">
+                        <h3>Parameters</h3>
+                        <table>
+                            <tr>
+                                <td><code>operation</code></td>
+                                <td>str</td>
+                                <td>Required</td>
+                                <td>Operation to perform: 'list', 'search', 'open', 'create', or 'listById'</td>
+                            </tr>
+                            <tr>
+                                <td><code>name</code></td>
+                                <td>str</td>
+                                <td>None</td>
+                                <td>Name of the reminder to create (required for create operation)</td>
+                            </tr>
+                            <tr>
+                                <td><code>due_date</code></td>
+                                <td>str</td>
+                                <td>None</td>
+                                <td>Due date for reminder in ISO format (optional for create operation)</td>
+                            </tr>
+                            <tr>
+                                <td><code>notes</code></td>
+                                <td>str</td>
+                                <td>None</td>
+                                <td>Additional notes for reminder (optional for create operation)</td>
+                            </tr>
+                            <tr>
+                                <td><code>show_completed</code></td>
+                                <td>bool</td>
+                                <td>False</td>
+                                <td>Whether to show completed reminders (shows only incomplete by default)</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="api-examples">
+                        <h3>Examples</h3>
+                        <div class="code-block">
+                            <pre><code>Create a reminder:
+"Create a reminder to 'Buy groceries' for tomorrow at 5pm"
+
+List reminders:
+"Show me all my incomplete reminders"</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="api-function" id="calendar">
+                    <h2>calendar</h2>
+                    <p class="api-description">Search, create, delete, move, and open calendar events in Apple Calendar app.</p>
+                    
+                    <div class="api-signature">
+                        <h3>Signature</h3>
+                        <code>calendar(operation: str, search_text: str = None, title: str = None, start_date: str = None, end_date: str = None, location: str = None, notes: str = None, is_all_day: bool = False, calendar_name: str = None, invitees: List[str] = None) → str</code>
+                    </div>
+
+                    <div class="api-parameters">
+                        <h3>Parameters</h3>
+                        <table>
+                            <tr>
+                                <td><code>operation</code></td>
+                                <td>str</td>
+                                <td>Required</td>
+                                <td>Operation to perform: 'search', 'open', 'list', 'create', 'delete', 'move', or 'calendars'</td>
+                            </tr>
+                            <tr>
+                                <td><code>title</code></td>
+                                <td>str</td>
+                                <td>None</td>
+                                <td>Title of the event to create (required for create operation)</td>
+                            </tr>
+                            <tr>
+                                <td><code>start_date</code></td>
+                                <td>str</td>
+                                <td>None</td>
+                                <td>Start date/time of the event in ISO format (required for create)</td>
+                            </tr>
+                            <tr>
+                                <td><code>end_date</code></td>
+                                <td>str</td>
+                                <td>None</td>
+                                <td>End date/time of the event in ISO format (required for create)</td>
+                            </tr>
+                            <tr>
+                                <td><code>location</code></td>
+                                <td>str</td>
+                                <td>None</td>
+                                <td>Location of the event (optional for create operation)</td>
+                            </tr>
+                            <tr>
+                                <td><code>invitees</code></td>
+                                <td>List[str]</td>
+                                <td>None</td>
+                                <td>List of email addresses to invite to the event (optional for create operation)</td>
+                            </tr>
+                            <tr>
+                                <td><code>is_all_day</code></td>
+                                <td>bool</td>
+                                <td>False</td>
+                                <td>Whether the event is an all-day event</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="api-examples">
+                        <h3>Examples</h3>
+                        <div class="code-block">
+                            <pre><code>Create an event:
+"Create a calendar event 'Team Meeting' from 2024-01-15T14:00:00 to 2024-01-15T15:00:00 at Conference Room A"
+
+Search events:
+"Find all calendar events this week containing 'meeting'"</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="api-function" id="maps">
+                    <h2>maps</h2>
+                    <p class="api-description">Search locations, manage guides, save favorites, and get directions using Apple Maps.</p>
+                    
+                    <div class="api-signature">
+                        <h3>Signature</h3>
+                        <code>maps(operation: str, query: str = None, from_address: str = None, to_address: str = None, transport_type: str = "driving") → str</code>
+                    </div>
+
+                    <div class="api-parameters">
+                        <h3>Parameters</h3>
+                        <table>
+                            <tr>
+                                <td><code>operation</code></td>
+                                <td>str</td>
+                                <td>Required</td>
+                                <td>Operation to perform (search, directions, etc.)</td>
+                            </tr>
+                            <tr>
+                                <td><code>query</code></td>
+                                <td>str</td>
+                                <td>None</td>
+                                <td>Search query for locations (required for search)</td>
+                            </tr>
+                            <tr>
+                                <td><code>from_address</code></td>
+                                <td>str</td>
+                                <td>None</td>
+                                <td>Starting address for directions (required for directions)</td>
+                            </tr>
+                            <tr>
+                                <td><code>to_address</code></td>
+                                <td>str</td>
+                                <td>None</td>
+                                <td>Destination address for directions (required for directions)</td>
+                            </tr>
+                            <tr>
+                                <td><code>transport_type</code></td>
+                                <td>str</td>
+                                <td>"driving"</td>
+                                <td>Type of transport to use (optional for directions)</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="api-examples">
+                        <h3>Examples</h3>
+                        <div class="code-block">
+                            <pre><code>Search locations:
+"Search for coffee shops near Apple Park"
+
+Get directions:
+"Get driving directions from Apple Park to San Francisco Airport"</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="api-function" id="web_search">
+                    <h2>web_search</h2>
+                    <p class="api-description">Search the web using DuckDuckGo and retrieve content from search results.</p>
+                    
+                    <div class="api-signature">
+                        <h3>Signature</h3>
+                        <code>web_search(query: str) → str</code>
+                    </div>
+
+                    <div class="api-parameters">
+                        <h3>Parameters</h3>
+                        <table>
+                            <tr>
+                                <td><code>query</code></td>
+                                <td>str</td>
+                                <td>Required</td>
+                                <td>Search query to look up</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="api-examples">
+                        <h3>Examples</h3>
+                        <div class="code-block">
+                            <pre><code>Web search:
+"Search the web for 'latest Python updates 2024'"</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 PyApple MCP Tools. Licensed under the MIT License.</p>
+            <p>Built with ❤️ for the Model Context Protocol ecosystem.</p>
+        </div>
+    </footer>
+</body>
+</html>

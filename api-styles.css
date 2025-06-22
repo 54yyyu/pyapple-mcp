@@ -1,0 +1,272 @@
+/* API Documentation Specific Styles */
+
+.api-hero {
+    background: linear-gradient(135deg, #34C759 0%, #007AFF 100%);
+    color: white;
+    text-align: center;
+    padding: 4rem 0;
+    margin-top: 70px;
+}
+
+.api-hero h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.api-hero p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+.container {
+    display: flex;
+    gap: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+    align-items: flex-start;
+}
+
+.api-sidebar {
+    flex: 0 0 250px;
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    position: sticky;
+    top: 90px;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+}
+
+.api-sidebar h3 {
+    margin-bottom: 1rem;
+    color: #333;
+    font-size: 1.2rem;
+}
+
+.api-nav {
+    list-style: none;
+    padding: 0;
+}
+
+.api-nav li {
+    margin-bottom: 0.5rem;
+}
+
+.api-nav a {
+    text-decoration: none;
+    color: #666;
+    padding: 0.5rem 0;
+    display: block;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.api-nav a:hover, .api-nav a.active {
+    color: #007AFF;
+    background: #f0f8ff;
+    padding-left: 1rem;
+}
+
+.api-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.api-function {
+    background: white;
+    padding: 3rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    margin-bottom: 2rem;
+}
+
+.api-function h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 1rem;
+    text-align: left;
+    border-bottom: 3px solid #007AFF;
+    padding-bottom: 0.5rem;
+}
+
+.api-description {
+    font-size: 1.1rem;
+    color: #666;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.api-signature, .api-parameters, .api-examples {
+    margin-bottom: 2rem;
+}
+
+.api-signature h3, .api-parameters h3, .api-examples h3 {
+    font-size: 1.3rem;
+    color: #333;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.api-signature code {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    display: block;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: #333;
+    word-wrap: break-word;
+    overflow-x: auto;
+}
+
+.api-parameters table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.api-parameters table th,
+.api-parameters table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+    vertical-align: top;
+}
+
+.api-parameters table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #333;
+}
+
+.api-parameters table td:first-child {
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    font-size: 0.9rem;
+    background: #f0f8ff;
+    color: #007AFF;
+    font-weight: 600;
+}
+
+.api-parameters table td:nth-child(2) {
+    font-style: italic;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.api-parameters table td:nth-child(3) {
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    font-size: 0.85rem;
+    color: #888;
+}
+
+.api-examples .code-block {
+    margin-top: 1rem;
+}
+
+/* Navigation active state */
+.nav-links a.active {
+    color: #007AFF;
+    font-weight: 600;
+}
+
+.logo a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Responsive design for API docs */
+@media (max-width: 1024px) {
+    .container {
+        flex-direction: column;
+    }
+    
+    .api-sidebar {
+        flex: none;
+        position: static;
+        max-height: none;
+        order: 2;
+    }
+    
+    .api-content {
+        order: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .api-hero {
+        padding: 3rem 0;
+    }
+    
+    .api-hero h1 {
+        font-size: 2.2rem;
+    }
+    
+    .api-function {
+        padding: 2rem 1.5rem;
+    }
+    
+    .api-function h2 {
+        font-size: 2rem;
+    }
+    
+    .container {
+        padding: 1rem;
+    }
+    
+    .api-sidebar {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .api-parameters table,
+    .api-parameters table tbody,
+    .api-parameters table tr,
+    .api-parameters table td {
+        display: block;
+    }
+    
+    .api-parameters table tr {
+        border: 1px solid #eee;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        border-radius: 8px;
+    }
+    
+    .api-parameters table td {
+        border: none;
+        padding: 0.25rem 0;
+    }
+    
+    .api-parameters table td:first-child {
+        background: transparent;
+        font-weight: 700;
+        font-size: 1rem;
+        color: #007AFF;
+        margin-bottom: 0.5rem;
+    }
+    
+    .api-parameters table td:nth-child(2):before {
+        content: "Type: ";
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .api-parameters table td:nth-child(3):before {
+        content: "Default: ";
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .api-parameters table td:nth-child(4):before {
+        content: "Description: ";
+        font-weight: 600;
+        color: #333;
+    }
+}
