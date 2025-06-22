@@ -289,9 +289,9 @@ class CalendarHandler:
         
         # Escape quotes in the content
         safe_title = title.replace('"', '\\"')
-        safe_location = location.replace('"', '\\"') if location else ""
-        safe_notes = notes.replace('"', '\\"') if notes else ""
-        safe_calendar = calendar_name.replace('"', '\\"') if calendar_name else ""
+        safe_location = (location or "").replace('"', '\\"')
+        safe_notes = (notes or "").replace('"', '\\"')
+        safe_calendar = (calendar_name or "").replace('"', '\\"')
         
         # Parse ISO dates to AppleScript format
         try:
@@ -303,20 +303,30 @@ class CalendarHandler:
         except ValueError:
             return {"success": False, "message": "Invalid date format. Please use ISO format."}
         
-        # Build calendar clause
+        # Build calendar clause - be more specific about default calendar
         if calendar_name:
             calendar_clause = f'calendar "{safe_calendar}"'
         else:
-            calendar_clause = 'default calendar'
+            calendar_clause = '(first calendar whose writable is true)'
         
         # Build location clause
-        location_clause = f'set location of newEvent to "{safe_location}"' if location else ""
+        location_clause = f'set location of newEvent to "{safe_location}"' if safe_location else ""
         
         # Build notes clause
-        notes_clause = f'set description of newEvent to "{safe_notes}"' if notes else ""
+        notes_clause = f'set description of newEvent to "{safe_notes}"' if safe_notes else ""
         
         # Build all-day clause
         all_day_clause = f'set allday event of newEvent to {str(is_all_day).lower()}'
+        
+        # Build the AppleScript with conditional clauses
+        clauses = []
+        if location_clause:
+            clauses.append(location_clause)
+        if notes_clause:
+            clauses.append(notes_clause)
+        clauses.append(all_day_clause)
+        
+        additional_properties = "\n                ".join(clauses)
         
         script = f'''
         tell application "Calendar"
@@ -327,9 +337,7 @@ class CalendarHandler:
                 
                 set newEvent to make new event at targetCalendar with properties {{summary:"{safe_title}", start date:startDate, end date:endDate}}
                 
-                {location_clause}
-                {notes_clause}
-                {all_day_clause}
+                {additional_properties}
                 
                 return "Success: Event created"
                 
