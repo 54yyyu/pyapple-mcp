@@ -98,6 +98,16 @@ def contacts(
             else:
                 return f"Failed to add contact: {result['message']}"
                 
+        elif operation == "move":
+            if not event_id or not target_calendar_name:
+                return "Event ID and target calendar name are required for move operation"
+            
+            result = calendar_handler.move_event(event_id, target_calendar_name)
+            if result["success"]:
+                return f"Successfully moved event: {result['message']}"
+            else:
+                return f"Failed to move event: {result['message']}"
+                
         elif operation == "delete":
             if not name:
                 return "Contact name is required for delete operation"
@@ -210,6 +220,16 @@ def notes(
                 return f"Successfully created note '{title}' in folder '{folder_name}'"
             else:
                 return f"Failed to create note: {result['message']}"
+                
+        elif operation == "move":
+            if not event_id or not target_calendar_name:
+                return "Event ID and target calendar name are required for move operation"
+            
+            result = calendar_handler.move_event(event_id, target_calendar_name)
+            if result["success"]:
+                return f"Successfully moved event: {result['message']}"
+            else:
+                return f"Failed to move event: {result['message']}"
                 
         elif operation == "delete":
             if not search_text:
@@ -495,6 +515,26 @@ def reminders(
             else:
                 return f"Failed to create reminder: {result['message']}"
                 
+        elif operation == "move":
+            if not event_id or not target_calendar_name:
+                return "Event ID and target calendar name are required for move operation"
+            
+            result = calendar_handler.move_event(event_id, target_calendar_name)
+            if result["success"]:
+                return f"Successfully moved event: {result['message']}"
+            else:
+                return f"Failed to move event: {result['message']}"
+                
+        elif operation == "delete":
+            if not event_id:
+                return "Event ID is required for delete operation"
+            
+            result = calendar_handler.delete_event(event_id)
+            if result["success"]:
+                return f"Successfully deleted event: {result['message']}"
+            else:
+                return f"Failed to delete event: {result['message']}"
+                
         elif operation == "open":
             if not search_text:
                 return "Search text is required for open operation"
@@ -526,15 +566,16 @@ def calendar(
     location: str = None,
     notes: str = None,
     is_all_day: bool = False,
-    calendar_name: str = None
+    calendar_name: str = None,
+    target_calendar_name: str = None
 ) -> str:
     """
-    Search, create, and open calendar events in Apple Calendar app.
+    Search, create, delete, move, and open calendar events in Apple Calendar app.
     
     Args:
-        operation: Operation to perform: 'search', 'open', 'list', or 'create'
+        operation: Operation to perform: 'search', 'open', 'list', 'create', 'delete', 'move', or 'calendars'
         search_text: Text to search for in event titles, locations, and notes (required for search)
-        event_id: ID of the event to open (required for open operation)
+        event_id: ID of the event to open, delete, or move (required for open, delete, and move operations)
         limit: Number of events to retrieve (optional, default 10)
         from_date: Start date for search range in ISO format (optional, default is today)
         to_date: End date for search range in ISO format (optional)
@@ -544,7 +585,8 @@ def calendar(
         location: Location of the event (optional for create operation)
         notes: Additional notes for the event (optional for create operation)
         is_all_day: Whether the event is an all-day event (optional, default False)
-        calendar_name: Name of the calendar to create event in (optional)
+        calendar_name: Name of the calendar to create event in or filter by (optional)
+        target_calendar_name: Name of the calendar to move event to (required for move operation)
     
     Returns:
         String containing calendar information or operation result
@@ -554,24 +596,38 @@ def calendar(
             if not search_text:
                 return "Search text is required for search operation"
             
-            events = calendar_handler.search_events(search_text, limit, from_date, to_date)
+            events = calendar_handler.search_events_db(search_text, limit, from_date, to_date, calendar_name)
             if events:
                 formatted_events = []
                 for event in events:
-                    formatted_events.append(f"{event['title']} ({event['start_date']} - {event['end_date']})\nLocation: {event['location'] or 'Not specified'}\nCalendar: {event['calendar_name']}\nID: {event['id']}")
-                return f"Found {len(events)} events matching '{search_text}':\n\n" + "\n\n".join(formatted_events)
+                    formatted_events.append(f"{event['title']} ({event['start_date']} - {event['end_date']})\nLocation: {event['location']}\nCalendar: {event['calendar_name']}\nID: {event['id']}")
+                filter_info = f" in calendar '{calendar_name}'" if calendar_name else ""
+                return f"Found {len(events)} events matching '{search_text}'{filter_info}:\n\n" + "\n\n".join(formatted_events)
             else:
-                return f"No events found matching '{search_text}'"
+                filter_info = f" in calendar '{calendar_name}'" if calendar_name else ""
+                return f"No events found matching '{search_text}'{filter_info}"
                 
         elif operation == "list":
-            events = calendar_handler.get_events(limit, from_date, to_date)
+            events = calendar_handler.get_events_db(limit, from_date, to_date, calendar_name)
             if events:
                 formatted_events = []
                 for event in events:
-                    formatted_events.append(f"{event['title']} ({event['start_date']} - {event['end_date']})\nLocation: {event['location'] or 'Not specified'}\nCalendar: {event['calendar_name']}\nID: {event['id']}")
-                return f"Found {len(events)} events:\n\n" + "\n\n".join(formatted_events)
+                    formatted_events.append(f"{event['title']} ({event['start_date']} - {event['end_date']})\nLocation: {event['location']}\nCalendar: {event['calendar_name']}\nID: {event['id']}")
+                filter_info = f" in calendar '{calendar_name}'" if calendar_name else ""
+                return f"Found {len(events)} events{filter_info}:\n\n" + "\n\n".join(formatted_events)
             else:
-                return "No events found"
+                filter_info = f" in calendar '{calendar_name}'" if calendar_name else ""
+                return f"No events found{filter_info}"
+                
+        elif operation == "calendars":
+            calendars = calendar_handler.get_available_calendars()
+            if calendars:
+                formatted_calendars = []
+                for cal in calendars:
+                    formatted_calendars.append(f"• {cal['title']} (Type: {cal['type']}) - ID: {cal['id']}")
+                return f"Found {len(calendars)} calendars:\n\n" + "\n".join(formatted_calendars)
+            else:
+                return "No calendars found"
                 
         elif operation == "create":
             if not title or not start_date or not end_date:
@@ -583,6 +639,26 @@ def calendar(
             else:
                 return f"Failed to create event: {result['message']}"
                 
+        elif operation == "move":
+            if not event_id or not target_calendar_name:
+                return "Event ID and target calendar name are required for move operation"
+            
+            result = calendar_handler.move_event(event_id, target_calendar_name)
+            if result["success"]:
+                return f"Successfully moved event: {result['message']}"
+            else:
+                return f"Failed to move event: {result['message']}"
+                
+        elif operation == "delete":
+            if not event_id:
+                return "Event ID is required for delete operation"
+            
+            result = calendar_handler.delete_event(event_id)
+            if result["success"]:
+                return f"Successfully deleted event: {result['message']}"
+            else:
+                return f"Failed to delete event: {result['message']}"
+                
         elif operation == "open":
             if not event_id:
                 return "Event ID is required for open operation"
@@ -593,7 +669,7 @@ def calendar(
             else:
                 return f"Failed to open event: {result['message']}"
         else:
-            return f"Unknown operation: {operation}. Valid operations are: search, list, create, open"
+            return f"Unknown operation: {operation}. Valid operations are: search, list, create, delete, move, open, calendars"
             
     except Exception as e:
         logger.error(f"Error in calendar tool: {e}")

@@ -5,6 +5,8 @@ Provides functionality to search, create, and manage calendar events using the m
 """
 
 import logging
+import sqlite3
+import os
 from typing import Dict, List, Any, Optional
 from datetime import datetime, timedelta
 from .applescript import applescript
@@ -17,6 +19,243 @@ class CalendarHandler:
     def __init__(self):
         """Initialize the calendar handler."""
         self.app_name = "Calendar"
+        self.db_path = os.path.expanduser("~/Library/Calendars/Calendar.sqlitedb")
+    
+    def get_available_calendars(self) -> List[Dict[str, Any]]:
+        """
+        Get list of available calendars from the database.
+        
+        Returns:
+            List of dictionaries containing calendar information
+        """
+        conn = self._get_db_connection()
+        if not conn:
+            return []
+        
+        try:
+            query = """
+                SELECT 
+                    ROWID,
+                    title,
+                    type,
+                    external_id,
+                    UUID
+                FROM Calendar 
+                WHERE title IS NOT NULL 
+                ORDER BY title
+            """
+            
+            cursor = conn.execute(query)
+            calendars = []
+            
+            for row in cursor.fetchall():
+                calendars.append({
+                    "id": row["ROWID"],
+                    "title": row["title"],
+                    "type": row["type"] or "Unknown",
+                    "external_id": row["external_id"] or "",
+                    "uuid": row["UUID"]
+                })
+            
+            return calendars
+            
+        except Exception as e:
+            logger.error(f"Database calendar list error: {e}")
+            return []
+        finally:
+            conn.close()
+
+    def _get_db_connection(self):
+        """Get a connection to the Calendar database."""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            conn.row_factory = sqlite3.Row  # Enable accessing columns by name
+            return conn
+        except Exception as e:
+            logger.error(f"Failed to connect to Calendar database: {e}")
+            return None
+    
+    def _convert_core_data_date(self, core_data_timestamp: float) -> str:
+        """Convert Core Data timestamp to readable date string."""
+        if core_data_timestamp is None:
+            return "No date"
+        
+        # Core Data uses a reference date of January 1, 2001 00:00:00 UTC
+        # Convert to Unix timestamp then to datetime
+        reference_date = datetime(2001, 1, 1)
+        actual_date = reference_date + timedelta(seconds=core_data_timestamp)
+        return actual_date.strftime("%Y-%m-%d %H:%M:%S")
+    
+    def search_events_db(self, search_text: str, limit: int = 10, from_date: Optional[str] = None, to_date: Optional[str] = None, calendar_filter: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Search for calendar events using direct database access.
+        
+        Args:
+            search_text: Text to search for in event titles, locations, and notes
+            limit: Maximum number of events to return
+            from_date: Start date for search range in ISO format (optional)
+            to_date: End date for search range in ISO format (optional)
+            calendar_filter: Calendar name to filter by (optional)
+            
+        Returns:
+            List of dictionaries containing event information
+        """
+        conn = self._get_db_connection()
+        if not conn:
+            return []
+        
+        try:
+            # Calculate Core Data timestamps if date range provided
+            date_filter = ""
+            calendar_filter_clause = ""
+            params = [f"%{search_text}%", f"%{search_text}%", f"%{search_text}%"]
+            
+            if calendar_filter:
+                calendar_filter_clause = " AND c.title = ?"
+                params.append(calendar_filter)
+            
+            if from_date or to_date:
+                reference_date = datetime(2001, 1, 1)
+                
+                if from_date:
+                    start_dt = datetime.fromisoformat(from_date[:19])  # Remove timezone
+                    start_timestamp = (start_dt - reference_date).total_seconds()
+                    date_filter += " AND ci.start_date >= ?"
+                    params.append(start_timestamp)
+                
+                if to_date:
+                    end_dt = datetime.fromisoformat(to_date[:19])  # Remove timezone
+                    end_timestamp = (end_dt - reference_date).total_seconds()
+                    date_filter += " AND ci.end_date <= ?"
+                    params.append(end_timestamp)
+            
+            query = f"""
+                SELECT 
+                    ci.ROWID,
+                    ci.summary,
+                    ci.description,
+                    ci.start_date,
+                    ci.end_date,
+                    ci.all_day,
+                    ci.UUID,
+                    c.title as calendar_name,
+                    l.title as location
+                FROM CalendarItem ci 
+                JOIN Calendar c ON ci.calendar_id = c.ROWID 
+                LEFT JOIN Location l ON ci.location_id = l.ROWID
+                WHERE (ci.summary LIKE ? OR ci.description LIKE ? OR l.title LIKE ?)
+                {calendar_filter_clause}
+                {date_filter}
+                ORDER BY ci.start_date ASC 
+                LIMIT ?
+            """
+            params.append(limit)
+            
+            cursor = conn.execute(query, params)
+            events = []
+            
+            for row in cursor.fetchall():
+                events.append({
+                    "id": row["UUID"],
+                    "title": row["summary"] or "Untitled",
+                    "location": row["location"] or "Not specified",
+                    "notes": row["description"] or "",
+                    "start_date": self._convert_core_data_date(row["start_date"]),
+                    "end_date": self._convert_core_data_date(row["end_date"]),
+                    "calendar_name": row["calendar_name"],
+                    "all_day": bool(row["all_day"])
+                })
+            
+            return events
+            
+        except Exception as e:
+            logger.error(f"Database search error: {e}")
+            return []
+        finally:
+            conn.close()
+    
+    def get_events_db(self, limit: int = 10, from_date: Optional[str] = None, to_date: Optional[str] = None, calendar_filter: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Get calendar events using direct database access.
+        
+        Args:
+            limit: Maximum number of events to return
+            from_date: Start date for search range in ISO format (optional)
+            to_date: End date for search range in ISO format (optional)
+            calendar_filter: Calendar name to filter by (optional)
+            
+        Returns:
+            List of dictionaries containing event information
+        """
+        conn = self._get_db_connection()
+        if not conn:
+            return []
+        
+        try:
+            # Set default date range if not provided
+            if not from_date:
+                from_date = datetime.now().isoformat()
+            if not to_date:
+                end_date = datetime.now() + timedelta(days=7)
+                to_date = end_date.isoformat()
+            
+            # Calculate Core Data timestamps
+            reference_date = datetime(2001, 1, 1)
+            start_dt = datetime.fromisoformat(from_date[:19])
+            end_dt = datetime.fromisoformat(to_date[:19])
+            start_timestamp = (start_dt - reference_date).total_seconds()
+            end_timestamp = (end_dt - reference_date).total_seconds()
+            
+            calendar_filter_clause = ""
+            params = [start_timestamp, end_timestamp]
+            
+            if calendar_filter:
+                calendar_filter_clause = " AND c.title = ?"
+                params.append(calendar_filter)
+            
+            query = f"""
+                SELECT 
+                    ci.ROWID,
+                    ci.summary,
+                    ci.description,
+                    ci.start_date,
+                    ci.end_date,
+                    ci.all_day,
+                    ci.UUID,
+                    c.title as calendar_name,
+                    l.title as location
+                FROM CalendarItem ci 
+                JOIN Calendar c ON ci.calendar_id = c.ROWID 
+                LEFT JOIN Location l ON ci.location_id = l.ROWID
+                WHERE ci.start_date >= ? AND ci.start_date <= ?
+                {calendar_filter_clause}
+                ORDER BY ci.start_date ASC 
+                LIMIT ?
+            """
+            params.append(limit)
+            
+            cursor = conn.execute(query, params)
+            events = []
+            
+            for row in cursor.fetchall():
+                events.append({
+                    "id": row["UUID"],
+                    "title": row["summary"] or "Untitled",
+                    "location": row["location"] or "Not specified", 
+                    "notes": row["description"] or "",
+                    "start_date": self._convert_core_data_date(row["start_date"]),
+                    "end_date": self._convert_core_data_date(row["end_date"]),
+                    "calendar_name": row["calendar_name"],
+                    "all_day": bool(row["all_day"])
+                })
+            
+            return events
+            
+        except Exception as e:
+            logger.error(f"Database get events error: {e}")
+            return []
+        finally:
+            conn.close()
     
     def search_events(self, search_text: str, limit: int = 10, from_date: Optional[str] = None, to_date: Optional[str] = None) -> List[Dict[str, Any]]:
         """
@@ -298,8 +537,9 @@ class CalendarHandler:
             start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
             end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
             
-            start_date_str = start_dt.strftime("%m/%d/%Y %H:%M:%S")
-            end_date_str = end_dt.strftime("%m/%d/%Y %H:%M:%S")
+            # Format for AppleScript - use explicit format that AppleScript can parse correctly
+            start_date_str = start_dt.strftime("%B %d, %Y at %I:%M:%S %p")
+            end_date_str = end_dt.strftime("%B %d, %Y at %I:%M:%S %p")
         except ValueError:
             return {"success": False, "message": "Invalid date format. Please use ISO format."}
         
@@ -359,6 +599,175 @@ class CalendarHandler:
             logger.error(f"Failed to create event: {result.get('error')}")
             return {"success": False, "message": f"Failed to create event: {result.get('error')}"}
     
+    def _find_event_calendar_db(self, event_id: str) -> Optional[str]:
+        """
+        Find which calendar contains the event using database lookup.
+        
+        Args:
+            event_id: UUID of the event to find
+            
+        Returns:
+            Calendar title if found, None otherwise
+        """
+        conn = self._get_db_connection()
+        if not conn:
+            return None
+        
+        try:
+            query = """
+                SELECT c.title 
+                FROM CalendarItem ci 
+                JOIN Calendar c ON ci.calendar_id = c.ROWID 
+                WHERE ci.UUID = ?
+            """
+            
+            cursor = conn.execute(query, [event_id])
+            row = cursor.fetchone()
+            
+            if row:
+                return row["title"]
+            return None
+            
+        except Exception as e:
+            logger.error(f"Database calendar lookup error: {e}")
+            return None
+        finally:
+            conn.close()
+
+    def delete_event(self, event_id: str) -> Dict[str, Any]:
+        """
+        Delete a specific calendar event.
+
+        Args:
+            event_id: ID of the event to delete
+            
+        Returns:
+            Dictionary with success status and message
+        """
+        if not applescript.check_app_access(self.app_name):
+            logger.error("Cannot access Calendar app")
+            return {"success": False, "message": "Cannot access Calendar app"}
+        
+        # First, try to find which calendar contains the event using database lookup
+        calendar_name = self._find_event_calendar_db(event_id)
+        
+        # Escape inputs to prevent injection issues
+        safe_event_id = event_id.replace('"', '\\"')
+        
+        if calendar_name:
+            # Optimized approach: target specific calendar
+            logger.info(f"Found event in calendar '{calendar_name}', using targeted deletion")
+            safe_calendar_name = calendar_name.replace('"', '\\"')
+            
+            # Determine timeout based on calendar type - longer for email-based calendars
+            timeout = 120 if any(indicator in calendar_name.lower() for indicator in ['@', 'gmail', 'exchange', 'outlook']) else 60
+            
+            script = f'''
+            tell application "Calendar"
+                try
+                    set eventUID to "{safe_event_id}"
+                    set targetCalendarName to "{safe_calendar_name}"
+                    
+                    -- Find the specific calendar
+                    set targetCalendar to null
+                    repeat with aCalendar in calendars
+                        if title of aCalendar is targetCalendarName then
+                            set targetCalendar to aCalendar
+                            exit repeat
+                        end if
+                    end repeat
+                    
+                    if targetCalendar is null then
+                        return "Error: Calendar not found: " & targetCalendarName
+                    end if
+                    
+                    -- Search only in this calendar (much faster)
+                    set calendarEvents to events of targetCalendar
+                    
+                    repeat with currentEvent in calendarEvents
+                        try
+                            if uid of currentEvent is eventUID then
+                                set eventTitle to summary of currentEvent
+                                delete currentEvent
+                                return "Success: Deleted event: " & eventTitle
+                            end if
+                        on error
+                            -- Skip problematic events
+                        end try
+                    end repeat
+                    
+                    return "Error: Event not found in target calendar"
+                    
+                on error errMsg
+                    return "Error: " & errMsg
+                end try
+            end tell
+            '''
+        else:
+            # Fallback: search all calendars (slower but comprehensive)
+            logger.warning(f"Could not determine calendar for event {event_id}, using fallback method")
+            timeout = 60
+            
+            script = f'''
+            tell application "Calendar"
+                try
+                    set eventUID to "{safe_event_id}"
+                    set foundEvent to null
+                    set foundEventTitle to ""
+                    
+                    -- Get all calendars first
+                    set allCalendars to calendars
+                    
+                    repeat with aCalendar in allCalendars
+                        try
+                            -- Get all events for this calendar as a list
+                            set calendarEvents to events of aCalendar
+                            
+                            -- Check each event's UID
+                            repeat with i from 1 to count of calendarEvents
+                                try
+                                    set currentEvent to item i of calendarEvents
+                                    if uid of currentEvent is eventUID then
+                                        set foundEvent to currentEvent
+                                        set foundEventTitle to summary of currentEvent
+                                        exit repeat
+                                    end if
+                                on error
+                                    -- Skip problematic events
+                                end try
+                            end repeat
+                            
+                            if foundEvent is not null then exit repeat
+                        on error
+                            -- Skip problematic calendars
+                        end try
+                    end repeat
+                    
+                    if foundEvent is not null then
+                        delete foundEvent
+                        return "Success: Deleted event: " & foundEventTitle
+                    else
+                        return "Error: No event found with ID: " & eventUID
+                    end if
+                    
+                on error errMsg
+                    return "Error: " & errMsg
+                end try
+            end tell
+            '''
+        
+        result = applescript.run_script(script, timeout=timeout)
+        if result['success'] and result['result']:
+            result_msg = result['result']
+            if result_msg.startswith("Success:"):
+                return {"success": True, "message": result_msg.replace("Success: ", "")}
+            else:
+                logger.error(f"Calendar delete error: {result_msg}")
+                return {"success": False, "message": result_msg}
+        else:
+            logger.error(f"Failed to delete event: {result.get('error')}")
+            return {"success": False, "message": f"Failed to delete event: {result.get('error')}"}
+
     def open_event(self, event_id: str) -> Dict[str, Any]:
         """
         Open a specific calendar event in the Calendar app.
