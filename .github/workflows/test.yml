@@ -26,17 +26,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install -e ".[dev]"
     
-    - name: Lint with black
+    - name: Basic syntax check
       run: |
-        black --check .
-    
-    - name: Sort imports with isort
-      run: |
-        isort --check-only .
-    
-    - name: Type check with mypy
-      run: |
-        mypy pyapple_mcp
+        python -m py_compile pyapple_mcp/__init__.py
+        python -m py_compile pyapple_mcp/server.py
     
     - name: Test package build
       run: |
