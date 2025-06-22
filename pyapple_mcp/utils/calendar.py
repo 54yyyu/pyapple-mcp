@@ -506,7 +506,7 @@ class CalendarHandler:
             logger.error(f"Failed to get events: {result.get('error')}")
             return []
     
-    def create_event(self, title: str, start_date: str, end_date: str, location: Optional[str] = None, notes: Optional[str] = None, is_all_day: bool = False, calendar_name: Optional[str] = None) -> Dict[str, Any]:
+    def create_event(self, title: str, start_date: str, end_date: str, location: Optional[str] = None, notes: Optional[str] = None, is_all_day: bool = False, calendar_name: Optional[str] = None, invitees: Optional[List[str]] = None) -> Dict[str, Any]:
         """
         Create a new calendar event.
         
@@ -518,6 +518,7 @@ class CalendarHandler:
             notes: Additional notes for the event (optional)
             is_all_day: Whether the event is all-day (optional)
             calendar_name: Name of the calendar to create the event in (optional)
+            invitees: List of email addresses to invite to the event (optional)
             
         Returns:
             Dictionary with success status and message
@@ -531,6 +532,16 @@ class CalendarHandler:
         safe_location = (location or "").replace('"', '\\"')
         safe_notes = (notes or "").replace('"', '\\"')
         safe_calendar = (calendar_name or "").replace('"', '\\"')
+        
+        # Process invitees
+        invitee_script = ""
+        if invitees and len(invitees) > 0:
+            # Create AppleScript to add attendees
+            attendee_lines = []
+            for invitee in invitees:
+                safe_invitee = invitee.replace('"', '\\"')
+                attendee_lines.append(f'make new attendee at newEvent with properties {{email:"{safe_invitee}"}}')
+            invitee_script = "\n                ".join(attendee_lines)
         
         # Parse ISO dates to AppleScript format
         try:
@@ -565,6 +576,8 @@ class CalendarHandler:
         if notes_clause:
             clauses.append(notes_clause)
         clauses.append(all_day_clause)
+        if invitee_script:
+            clauses.append(invitee_script)
         
         additional_properties = "\n                ".join(clauses)
         

@@ -567,7 +567,8 @@ def calendar(
     notes: str = None,
     is_all_day: bool = False,
     calendar_name: str = None,
-    target_calendar_name: str = None
+    target_calendar_name: str = None,
+    invitees: List[str] = None
 ) -> str:
     """
     Search, create, delete, move, and open calendar events in Apple Calendar app.
@@ -587,6 +588,7 @@ def calendar(
         is_all_day: Whether the event is an all-day event (optional, default False)
         calendar_name: Name of the calendar to create event in or filter by (optional)
         target_calendar_name: Name of the calendar to move event to (required for move operation)
+        invitees: List of email addresses to invite to the event (optional for create operation)
     
     Returns:
         String containing calendar information or operation result
@@ -633,9 +635,12 @@ def calendar(
             if not title or not start_date or not end_date:
                 return "Title, start_date, and end_date are required for create operation"
             
-            result = calendar_handler.create_event(title, start_date, end_date, location, notes, is_all_day, calendar_name)
+            result = calendar_handler.create_event(title, start_date, end_date, location, notes, is_all_day, calendar_name, invitees)
             if result["success"]:
-                return f"Successfully created event '{title}' from {start_date} to {end_date}"
+                success_msg = f"Successfully created event '{title}' from {start_date} to {end_date}"
+                if invitees:
+                    success_msg += f" with {len(invitees)} invitee(s): {', '.join(invitees)}"
+                return success_msg
             else:
                 return f"Failed to create event: {result['message']}"
                 

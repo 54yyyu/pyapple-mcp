@@ -11,9 +11,9 @@ A Python implementation of Apple-native tools for the [Model Context Protocol (M
 ## Features
 
 - **Messages**: Send and read messages using the Apple Messages app
-- **Notes**: List, search, and create notes in Apple Notes app  
+- **Notes**: List, search, create, and delete notes in Apple Notes app  
 - **Contacts**: Search contacts from Apple Contacts
-- **Emails**: Send emails, search messages, and manage mail with Apple Mail
+- **Emails**: Send emails, search messages, and manage mail with Apple Mail (includes optimized local database search)
 - **Reminders**: List, search, and create reminders in Apple Reminders app
 - **Calendar**: Search events, create calendar entries, and manage your schedule
 - **Web Search**: Search the web using DuckDuckGo
