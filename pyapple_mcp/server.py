@@ -15,7 +15,7 @@ from mcp.server.fastmcp import FastMCP
 
 # Import all tool implementations
 from .utils.contacts import ContactsHandler
-from .utils.notes import NotesHandler  
+from .utils.notes import NotesHandler
 from .utils.messages import MessagesHandler
 from .utils.mail import MailHandler
 from .utils.reminders import RemindersHandler
@@ -26,8 +26,8 @@ from .utils.websearch import WebSearchHandler
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[logging.StreamHandler(sys.stderr)]
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler(sys.stderr)],
 )
 
 logger = logging.getLogger(__name__)
@@ -37,13 +37,13 @@ app = FastMCP(
     "PyApple MCP Tools",
     dependencies=[
         "httpx>=0.25.0",
-        "beautifulsoup4>=4.12.0", 
+        "beautifulsoup4>=4.12.0",
         "pyobjc-framework-Cocoa>=10.0",
         "pyobjc-framework-AddressBook>=10.0",
         "pyobjc-framework-EventKit>=10.0",
         "pyobjc-framework-ScriptingBridge>=10.0",
         "pyobjc-framework-MapKit>=10.0",
-    ]
+    ],
 )
 
 # Initialize handlers
@@ -64,11 +64,11 @@ def contacts(
     first_name: str = None,
     last_name: str = None,
     phone: str = None,
-    email: str = None
+    email: str = None,
 ) -> str:
     """
     Search, add, and manage contacts in Apple Contacts app.
-    
+
     Args:
         operation: Operation to perform: 'search', 'add', or 'delete' (default: 'search')
         name: Name to search for (optional - if not provided, returns all contacts)
@@ -76,7 +76,7 @@ def contacts(
         last_name: Last name for new contact (optional for add operation)
         phone: Phone number for new contact (optional for add operation)
         email: Email address for new contact (optional for add operation)
-    
+
     Returns:
         String containing contact information or operation result
     """
@@ -97,17 +97,7 @@ def contacts(
                 return contact_info
             else:
                 return f"Failed to add contact: {result['message']}"
-                
-        elif operation == "move":
-            if not event_id or not target_calendar_name:
-                return "Event ID and target calendar name are required for move operation"
-            
-            result = calendar_handler.move_event(event_id, target_calendar_name)
-            if result["success"]:
-                return f"Successfully moved event: {result['message']}"
-            else:
-                return f"Failed to move event: {result['message']}"
-                
+
         elif operation == "delete":
             if not name:
                 return "Contact name is required for delete operation"
@@ -153,20 +143,20 @@ def contacts(
 def notes(
     operation: str,
     search_text: str = None,
-    title: str = None, 
+    title: str = None,
     body: str = None,
-    folder_name: str = "Claude"
+    folder_name: str = "Claude",
 ) -> str:
     """
     Search, retrieve, create, and delete notes in Apple Notes app.
-    
+
     Args:
         operation: Operation to perform: 'search', 'list', 'view', 'create', or 'delete'
         search_text: Text to search for in notes (required for search, view, and delete operations)
         title: Title of the note to create (required for create operation)
         body: Content of the note to create (required for create operation)
         folder_name: Name of the folder to create the note in (optional for create, defaults to 'Claude')
-    
+
     Returns:
         String containing notes information or operation result
     """
@@ -179,8 +169,13 @@ def notes(
             if results:
                 formatted_results = []
                 for note in results:
-                    formatted_results.append(f"Title: {note['title']}\nContent: {note['content'][:200]}...")
-                return f"Found {len(results)} notes matching '{search_text}':\n\n" + "\n\n".join(formatted_results)
+                    formatted_results.append(
+                        f"Title: {note['title']}\nContent: {note['content'][:200]}..."
+                    )
+                return (
+                    f"Found {len(results)} notes matching '{search_text}':\n\n"
+                    + "\n\n".join(formatted_results)
+                )"
             else:
                 return f"No notes found matching '{search_text}'"
                 
@@ -220,17 +215,7 @@ def notes(
                 return f"Successfully created note '{title}' in folder '{folder_name}'"
             else:
                 return f"Failed to create note: {result['message']}"
-                
-        elif operation == "move":
-            if not event_id or not target_calendar_name:
-                return "Event ID and target calendar name are required for move operation"
-            
-            result = calendar_handler.move_event(event_id, target_calendar_name)
-            if result["success"]:
-                return f"Successfully moved event: {result['message']}"
-            else:
-                return f"Failed to move event: {result['message']}"
-                
+
         elif operation == "delete":
             if not search_text:
                 return "Search text is required for delete operation"
@@ -254,18 +239,18 @@ def messages(
     phone_number: str = None,
     message: str = None,
     limit: int = 10,
-    scheduled_time: str = None
+    scheduled_time: str = None,
 ) -> str:
     """
     Interact with Apple Messages app - send, read, schedule messages and check unread messages.
-    
+
     Args:
         operation: Operation to perform: 'send', 'read', 'schedule', or 'unread'
         phone_number: Phone number for send, read, and schedule operations
-        message: Message to send (required for send and schedule operations)  
+        message: Message to send (required for send and schedule operations)
         limit: Number of messages to read (optional, for read and unread operations)
         scheduled_time: ISO string of when to send message (required for schedule operation)
-    
+
     Returns:
         String containing operation result or message content
     """
@@ -339,13 +324,13 @@ def mail(
     bcc: str = None,
     full_content: bool = False,
     search_range: int = None,
-    mark_read: bool = False
+    mark_read: bool = False,
 ) -> str:
     """
     Interact with Apple Mail app - read unread emails, search emails, and send emails.
     Optimized for performance by accessing local Mail database directly.
     Searches all accounts by default when no account is specified.
-    
+
     Args:
         operation: Operation to perform: 'unread', 'search', 'send', 'mailboxes', or 'accounts'
         account: Email account to use (optional, searches all accounts if not specified)
@@ -353,14 +338,14 @@ def mail(
         limit: Number of emails to retrieve (optional, for unread and search operations)
         search_term: Text to search for in emails (required for search operation)
         to: Recipient email address (required for send operation)
-        subject: Email subject (required for send operation) 
+        subject: Email subject (required for send operation)
         body: Email body content (required for send operation)
         cc: CC email address (optional for send operation)
         bcc: BCC email address (optional for send operation)
         full_content: If True, return full email content without truncation (default: False)
         search_range: Number of recent messages to search through per inbox (optional, ignored for database method)
         mark_read: If True, mark retrieved unread emails as read (default: False, only for unread operation)
-    
+
     Returns:
         String containing email information or operation result
     """

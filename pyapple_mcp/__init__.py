@@ -6,7 +6,7 @@ including Messages, Notes, Contacts, Mail, Calendar, Reminders, Maps, and Web Se
 """
 
 __version__ = "1.0.0"
-__author__ = "PyApple MCP Contributors"
+__author__ = "Steven Yu"
 __email__ = "pyapple-mcp@example.com"
 __description__ = "Python implementation of Apple MCP tools for macOS"
 

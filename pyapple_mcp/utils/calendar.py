@@ -19,7 +19,9 @@ class CalendarHandler:
     def __init__(self):
         """Initialize the calendar handler."""
         self.app_name = "Calendar"
-        self.db_path = os.path.expanduser("~/Library/Calendars/Calendar.sqlitedb")
+        self.db_path = os.path.expanduser(
+            "~/Library/Calendars/Calendar.sqlitedb"
+        )
     
     def get_available_calendars(self) -> List[Dict[str, Any]]:
         """

@@ -18,8 +18,9 @@ from pathlib import Path
 
 def print_ascii_art():
     """Print the PyApple-MCP ASCII art logo."""
-    print("""
-          
+    print(
+        """
+
   _____              ,--./,-.     __   __  _____ ____
  |  __ \           / #       \   |  \/  |/ ____|  __ \\
  | |__) |  _   _   |          |  | \  / | |    | |__) |
@@ -32,7 +33,8 @@ def print_ascii_art():
 PyApple-MCP Setup Helper
 ========================
 Apple App Integration for Claude AI (macOS Only)
-""")
+"""
+    )
 
 
 
@@ -51,7 +53,10 @@ def find_executable():
     
     # Python framework locations (common on macOS)
     import glob
-    framework_bins = glob.glob("/Library/Frameworks/Python.framework/Versions/*/bin")
+
+    framework_bins = glob.glob(
+        "/Library/Frameworks/Python.framework/Versions/*/bin"
+    )
     for bin_path in framework_bins:
         potential_paths.append(Path(bin_path) / exe_name)
     
@@ -71,7 +76,9 @@ def find_executable():
     potential_paths.append(Path.home() / ".uv" / "bin" / exe_name)
     
     # Python user bin directories
-    python_user_bins = glob.glob(str(Path.home() / "Library" / "Python" / "*" / "bin"))
+    python_user_bins = glob.glob(
+        str(Path.home() / "Library" / "Python" / "*" / "bin")
+    )
     for bin_path in python_user_bins:
         potential_paths.append(Path(bin_path) / exe_name)
     
@@ -92,9 +99,23 @@ def find_executable():
     print("Searching for pyapple-mcp in common locations...")
     try:
         import subprocess
+
         result = subprocess.run(
-            ["find", os.path.expanduser("~"), "/usr/local", "/opt", "/Library", "-name", "pyapple-mcp", "-type", "f", "-executable"],
-            capture_output=True, text=True, timeout=15
+            [
+                "find",
+                os.path.expanduser("~"),
+                "/usr/local",
+                "/opt",
+                "/Library",
+                "-name",
+                "pyapple-mcp",
+                "-type",
+                "f",
+                "-executable",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=15,
         )
         paths = result.stdout.strip().split('\n')
         if paths and paths[0]:

@@ -27,17 +27,22 @@ class MailHandler:
         self.mail_dir = Path(mail_dir) if mail_dir else Path.home() / "Library" / "Mail"
         self.envelope_db = self.mail_dir / "V10" / "MailData" / "Envelope Index"
     
-    def _get_emails_from_db(self, limit: int = 20, content_length: int = 500, 
-                           unread_only: bool = False, search_term: Optional[str] = None) -> List[Dict[str, str]]:
+    def _get_emails_from_db(
+        self,
+        limit: int = 20,
+        content_length: int = 500,
+        unread_only: bool = False,
+        search_term: Optional[str] = None,
+    ) -> List[Dict[str, str]]:
         """
         Retrieve emails from the local Mail database.
-        
+
         Args:
             limit: Maximum number of emails to return
             content_length: Maximum content length per email
             unread_only: If True, only return unread emails
             search_term: If provided, search for this term in emails
-            
+
         Returns:
             List of email dictionaries
         """
@@ -53,7 +58,7 @@ class MailHandler:
             
             # Build the query with proper joins - include display name
             query = """
-            SELECT 
+            SELECT
                 m.ROWID,
                 COALESCE(addr.address, 'Unknown Sender') as sender_address,
                 COALESCE(addr.comment, '') as sender_comment,
@@ -63,7 +68,7 @@ class MailHandler:
                 m.read
             FROM messages m
             LEFT JOIN addresses addr ON m.sender = addr.ROWID
-            LEFT JOIN subjects subj ON m.subject = subj.ROWID  
+            LEFT JOIN subjects subj ON m.subject = subj.ROWID
             LEFT JOIN mailboxes mb ON m.mailbox = mb.ROWID
             WHERE m.deleted = 0
             """

@@ -19,26 +19,32 @@ class WebSearchHandler:
     
     def __init__(self):
         """Initialize the web search handler."""
-        self.base_url = "https://html.duckduckgo.com"  # Updated to use the correct domain
+        self.base_url = (
+            "https://html.duckduckgo.com"  # Updated to use the correct domain
+        )
         self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            "User-Agent": (
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/91.0.4472.124 Safari/537.36"
+            )
         }
     
     async def _get_vqd(self, client: httpx.AsyncClient, query: str) -> str:
         """
         Get the vqd token required for DuckDuckGo search.
-        
+
         Args:
             client: HTTP client instance
             query: Search query
-            
+
         Returns:
             vqd token string
         """
         # First, hit the main DDG page to harvest the vqd value
-        r = await client.get("https://duckduckgo.com", params={'q': query})
+        r = await client.get("https://duckduckgo.com", params={"q": query})
         r.raise_for_status()
-        m = re.search(r'vqd=([\d-]+)&', r.text)
+        m = re.search(r"vqd=([\d-]+)&", r.text)
         if not m:
             raise RuntimeError("Could not find vqd token")
         return m.group(1)
@@ -61,13 +67,11 @@ class WebSearchHandler:
                 
                 # Perform the search with vqd token
                 search_url = f"{self.base_url}/html/"
-                params = {
-                    'q': query,
-                    'kl': 'us-en',
-                    'vqd': vqd
-                }
+                params = {"q": query, "kl": "us-en", "vqd": vqd}
                 
-                response = await client.get(search_url, params=params, follow_redirects=True)
+                response = await client.get(
+                    search_url, params=params, follow_redirects=True
+                )
                 response.raise_for_status()
                 
                 # Parse the search results with updated selectors
@@ -83,43 +87,46 @@ class WebSearchHandler:
                         a = block.select_one("a.result__a")
                         if not a:  # Skip ads or malformed results
                             continue
-                            
+
                         # Extract basic information
                         title = a.get_text(" ", strip=True)
-                        url = a.get('href', '')
+                        url = a.get("href", "")
                         
                         # Get snippet with fallback selectors
-                        snippet_elem = (block.select_one("div.result__snippet") or 
-                                      block.select_one("span.result__snippet"))
-                        snippet = snippet_elem.get_text(" ", strip=True) if snippet_elem else ""
+                        snippet_elem = block.select_one(
+                            "div.result__snippet"
+                        ) or block.select_one("span.result__snippet")
+                        snippet = (
+                            snippet_elem.get_text(" ", strip=True)
+                            if snippet_elem
+                            else ""
+                        )
                         
                         # Try to fetch and extract content from the actual page
                         page_content = await self._extract_page_content(client, url)
                         
-                        results.append({
-                            'title': title,
-                            'url': url,
-                            'snippet': snippet,
-                            'content': page_content[:500] + "..." if len(page_content) > 500 else page_content
-                        })
+                        results.append(
+                            {
+                                "title": title,
+                                "url": url,
+                                "snippet": snippet,
+                                "content": (
+                                    page_content[:500] + "..."
+                                    if len(page_content) > 500
+                                    else page_content
+                                ),
+                            }
+                        )
                         
                     except Exception as e:
                         logger.warning(f"Error processing search result: {e}")
                         continue
                 
-                return {
-                    'success': True,
-                    'results': results,
-                    'error': None
-                }
+                return {\"success\": True, \"results\": results, \"error\": None}
                 
         except Exception as e:
             logger.error(f"Web search failed: {e}")
-            return {
-                'success': False,
-                'results': [],
-                'error': str(e)
-            }
+            return {\"success\": False, \"results\": [], \"error\": str(e)}
     
     def search_web_sync(self, query: str, max_results: int = 5) -> Dict[str, Any]:
         """
@@ -162,11 +169,7 @@ class WebSearchHandler:
                     raise
         except Exception as e:
             logger.error(f"Sync web search failed: {e}")
-            return {
-                'success': False,
-                'results': [],
-                'error': str(e)
-            }
+            return {\"success\": False, \"results\": [], \"error\": str(e)}
     
     async def _extract_page_content(self, client: httpx.AsyncClient, url: str) -> str:
         """

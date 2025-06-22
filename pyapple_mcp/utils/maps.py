@@ -20,17 +20,21 @@ class MapsHandler:
     def search_locations(self, query: str, limit: int = 5) -> Dict[str, Any]:
         """
         Search for locations using Apple Maps.
-        
+
         Args:
             query: Search query for locations
             limit: Maximum number of results to return
-            
+
         Returns:
             Dictionary with success status, locations list, and message
         """
         if not applescript.check_app_access(self.app_name):
             logger.error("Cannot access Maps app")
-            return {"success": False, "locations": [], "message": "Cannot access Maps app"}
+            return {
+                "success": False,
+                "locations": [],
+                "message": "Cannot access Maps app",
+            }
         
         # Escape quotes in the query
         safe_query = query.replace('"', '\\"')
@@ -58,15 +62,28 @@ class MapsHandler:
             if result_msg.startswith("Success:"):
                 return {
                     "success": True,
-                    "locations": [{"name": f"Search: {query}", "address": "Please check Maps app for results"}],
-                    "message": f"Maps activated for search '{query}'. Apple Maps has limited AppleScript support - please manually search in the Maps app."
+                    "locations": [
+                        {
+                            "name": f"Search: {query}",
+                            "address": "Please check Maps app for results",
+                        }
+                    ],
+                    "message": (
+                        f"Maps activated for search '{query}'. Apple Maps has "
+                        "limited AppleScript support - please manually search "
+                        "in the Maps app."
+                    ),
                 }
             else:
                 logger.error(f"Maps search error: {result_msg}")
                 return {"success": False, "locations": [], "message": result_msg.replace("Error: ", "")}
         else:
             logger.error(f"Failed to search locations: {result.get('error')}")
-            return {"success": False, "locations": [], "message": f"AppleScript error: {result.get('error')}"}
+            return {
+                "success": False,
+                "locations": [],
+                "message": f"AppleScript error: {result.get('error')}",
+            }
     
     def save_location(self, name: str, address: str) -> Dict[str, Any]:
         """

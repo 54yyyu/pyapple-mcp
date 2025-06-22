@@ -20,10 +20,10 @@ class ContactsHandler:
     def find_number(self, name: str) -> List[str]:
         """
         Find phone numbers for a contact by name.
-        
+
         Args:
             name: Name to search for (can be partial)
-            
+
         Returns:
             List of phone numbers for the contact
         """
@@ -35,19 +35,19 @@ class ContactsHandler:
         tell application "Contacts"
             set foundNumbers to {{}}
             set searchName to "{name}"
-            
+
             try
                 set foundPeople to (every person whose name contains searchName)
-                
+
                 repeat with aPerson in foundPeople
                     set personName to name of aPerson
                     set phoneNumbers to value of every phone of aPerson
-                    
+
                     repeat with aPhone in phoneNumbers
                         set end of foundNumbers to (personName & ": " & aPhone)
                     end repeat
                 end repeat
-                
+
                 if length of foundNumbers > 0 then
                     set AppleScript's text item delimiters to ", "
                     set resultString to foundNumbers as string
@@ -56,7 +56,7 @@ class ContactsHandler:
                 else
                     return ""
                 end if
-                
+
             on error errMsg
                 return "Error: " & errMsg
             end try
@@ -64,9 +64,9 @@ class ContactsHandler:
         '''
         
         result = applescript.run_script(script)
-        if result['success'] and result['result']:
+        if result["success"] and result["result"]:
             # Parse the returned phone numbers
-            phone_data = result['result']
+            phone_data = result["result"]
             if phone_data.startswith("Error:"):
                 logger.error(f"Contacts error: {phone_data}")
                 return []

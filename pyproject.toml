@@ -1,20 +1,21 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyapple-mcp"
 version = "1.0.1"
 description = "Python implementation of Apple MCP tools for macOS"
 readme = "README.md"
-license = { text = "MIT" }
+license = "MIT"
 authors = [
-    { name = "Apple MCP Python", email = "pyapple-mcp@example.com" }
+    { name = "Steven Yu", email = "pyapple-mcp@example.com" }
 ]
+keywords = ["mcp", "model-context-protocol", "apple", "macos", "automation", "applescript"]
+
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
@@ -22,7 +23,9 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Operating System :: MacOS",
 ]
+
 requires-python = ">=3.9"
+
 dependencies = [
     "mcp>=1.0.0",
     "httpx>=0.25.0",
@@ -34,6 +37,10 @@ dependencies = [
     "pyobjc-framework-MapKit>=10.0",
 ]
 
+[tool.setuptools.packages.find]
+include = ["pyapple_mcp*"]
+exclude = ["contexts*"]
+
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0.0",
@@ -44,9 +51,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/pyapple-mcp/pyapple-mcp"
-Repository = "https://github.com/pyapple-mcp/pyapple-mcp"
-Issues = "https://github.com/pyapple-mcp/pyapple-mcp/issues"
+Homepage = "https://54yyyu.github.io/pyapple-mcp/"
+Repository = "https://github.com/54yyyu/pyapple-mcp"
+Issues = "https://github.com/54yyyu/pyapple-mcp/issues"
+Documentation = "https://54yyyu.github.io/pyapple-mcp/api.html"
 
 [project.scripts]
 pyapple-mcp = "pyapple_mcp.server:main"

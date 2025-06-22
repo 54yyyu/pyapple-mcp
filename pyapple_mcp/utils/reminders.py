@@ -17,14 +17,16 @@ class RemindersHandler:
         """Initialize the reminders handler."""
         self.app_name = "Reminders"
     
-    def list_reminders(self, list_name: Optional[str] = None, show_completed: bool = False) -> List[Dict[str, str]]:
+    def list_reminders(
+        self, list_name: Optional[str] = None, show_completed: bool = False
+    ) -> List[Dict[str, str]]:
         """
         List all reminders or reminders from a specific list.
-        
+
         Args:
             list_name: Name of the specific list to get reminders from (optional)
             show_completed: Whether to include completed reminders (default: False)
-            
+
         Returns:
             List of dictionaries containing reminder information
         """
@@ -159,7 +161,13 @@ class RemindersHandler:
             logger.error(f"Failed to search reminders: {result.get('error')}")
             return []
     
-    def create_reminder(self, name: str, list_name: Optional[str] = None, notes: Optional[str] = None, due_date: Optional[str] = None) -> Dict[str, Any]:
+    def create_reminder(
+        self,
+        name: str,
+        list_name: Optional[str] = None,
+        notes: Optional[str] = None,
+        due_date: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """
         Create a new reminder.
         

@@ -22,7 +22,9 @@ class MessagesHandler:
     def __init__(self):
         """Initialize the messages handler."""
         self.app_name = "Messages"
-        self.messages_db_path = os.path.expanduser("~/Library/Messages/chat.db")
+        self.messages_db_path = os.path.expanduser(
+            "~/Library/Messages/chat.db"
+        )
     
     def check_database_access(self) -> bool:
         """Check if we can access the Messages database"""
